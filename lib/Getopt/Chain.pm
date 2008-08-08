@@ -15,37 +15,85 @@ Version 0.01
 
 our $VERSION = '0.01';
 
+use Moose;
+use Getopt::Long qw/GetOptionsFromArray/;
+use XXX -dumper;
 
-=head1 SYNOPSIS
+has options => qw/is rw isa HashRef/;
 
-Quick summary of what the module does.
+has schema => qw/is ro isa Maybe[HashRef]/;
+has _getopt_long_options => qw/is rw isa ArrayRef/;
 
-Perhaps a little code snippet.
+has commands => qw/is ro isa Maybe[HashRef]/;
 
-    use Getopt::Chain;
+has do => qw/is ro isa Maybe[CodeRef]/;
 
-    my $foo = Getopt::Chain->new();
-    ...
+has _next => qw/is ro isa Getopt::Buddy/;
 
-=head1 EXPORT
+has validate => qw/is ro isa Maybe[CodeRef]/;
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+has catch => qw/is ro isa Maybe[CodeRef]/;
 
-=head1 FUNCTIONS
+sub BUILD {
+    my $self = shift;
+    my $given = shift;
 
-=head2 function1
+    my ($schema, $getopt_long_options) = $self->_parse_schema($self->schema);
 
-=cut
-
-sub function1 {
+    $self->{schema} = $schema;
+    $self->_getopt_long_options($getopt_long_options);
 }
 
-=head2 function2
+sub _parse_schema {
+    my $self = shift;
+    my $schema = shift;
 
-=cut
+    my %schema;
+    my @getopt_long_options;
 
-sub function2 {
+    while (my ($specification, $more) = each %$schema) {
+
+        my (%option, %ParseOptionSpec);
+
+        my ($key, $name) = Getopt::Long::ParseOptionSpec($specification, \%ParseOptionSpec);
+
+        $option{key} = $key;
+        $option{name} = $name;
+        $option{aliases} = [ keys %ParseOptionSpec ];
+
+        $schema{$key} = \%option;
+        push @getopt_long_options, $specification;
+    }
+
+    return (\%schema, \@getopt_long_options);
+}
+
+sub process {
+    my $self = shift;
+    my $arguments = shift;
+
+    my %options;
+    my $validate = $self->validate;
+    my $catch = $self->catch;
+    my $do = $self->do;
+    my $commands = $self->commands;
+    $arguments = [ @ARGV ] unless $arguments;
+
+    eval {
+        if (my $getopt_long_options = $self->_getopt_long_options) {
+            GetOptionsFromArray($arguments, \%options, @$getopt_long_options);
+        }
+    };
+    if (my $error = $@) {
+        die $@ unless $catch;
+        $catch->($@);
+    }
+
+    $self->options(\%options);
+
+    $validate->(\%options, $self) if $validate;
+
+    $do->(\%options, $self) if $do;
 }
 
 =head1 AUTHOR
