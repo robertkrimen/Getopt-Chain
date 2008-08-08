@@ -2,28 +2,41 @@ use strict;
 use warnings;
 
 use Test::Most;
+use XXX;
 
 use Getopt::Chain;
 
 plan qw/no_plan/;
 
-my $buddy = Getopt::Chain->new(
+Getopt::Chain->process(
+
+    [qw/--banana --file show/],
 
     options => {
 
-        'lEngth|l' => undef,
-        'veRbose' => undef,
-        'fiLe=s' => undef,
+        'apple|a' => undef,
+        'banana' => undef,
+        'cherry=s' => undef,
     }, 
 
     commands => {
+
+        show => {
+            grape => undef,
+
+            run => sub {
+                my $context = shift;
+
+                WWW $context->all_options;
+
+                warn "In ", $context->command;
+            },
+        },
     },
 
     validate => sub {
     },
 
-    catch => sub {
-    },
-
 );
 
+ok(1);
