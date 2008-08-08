@@ -24,6 +24,8 @@ _END_
 
     map { my ($pk, $vr) = split m/\s/; requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
 Getopt::Long 2.37
+Moose
+Carp::Clan::Share
 _END_
 }
 

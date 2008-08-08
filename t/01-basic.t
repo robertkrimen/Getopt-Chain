@@ -2,7 +2,6 @@ use strict;
 use warnings;
 
 use Test::Most;
-use XXX;
 
 use Getopt::Chain;
 
@@ -48,7 +47,7 @@ cmp_deeply($options, { qw/apple 1 banana cherry/ });
 cmp_deeply(\@path, [ undef, qw/grape/ ]);
 
 undef @path;
-@arguments = qw/--apple grape --banana cherry lime mango berry --opathge/;
+@arguments = qw/--apple grape --banana cherry lime mango berry --orange/;
 $options = Getopt::Chain->process(\@arguments, 
     options => [ qw/apple/ ],
     run => $run,
@@ -67,10 +66,10 @@ $options = Getopt::Chain->process(\@arguments,
                             run => $run,
                             commands => {
                                 berry => {
-                                    options => [ qw/opathge/ ],
+                                    options => [ qw/orange/ ],
                                     run => sub {
                                         $run->(@_);
-                                        cmp_deeply($_[0]->options, { qw/opathge 1 / });
+                                        cmp_deeply($_[0]->options, { qw/orange 1 / });
                                     },
                                 },
                             },
@@ -83,5 +82,5 @@ $options = Getopt::Chain->process(\@arguments,
         },
     },
 );
-cmp_deeply($options, { qw/apple 1 banana cherry opathge 1/ });
+cmp_deeply($options, { qw/apple 1 banana cherry orange 1/ });
 cmp_deeply(\@path, [ undef, qw/grape lime mango berry/ ]);

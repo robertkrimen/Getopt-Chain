@@ -9,11 +9,83 @@ Getopt::Chain - svn- and git-style option and subcommand processing
 
 =head1 VERSION
 
-Version 0.01
+Version 0.001_1
+
+=head1 SYNPOSIS 
+
+    #!/usr/bin/perl -w
+
+    use strict;
+    use Getopt::Chain;
+
+    Getopt::Chain->process(
+
+        options => [ qw/apple/ ],
+        run => sub {
+            my $context = shift;
+
+            # ... do stuff before grape or mango stuff ...
+
+        },
+        commands => {
+
+            grape => {
+                options => [ qw/banana:s/ ],
+                run => sub {
+                    my $context = shift;
+
+                    # ... do grape stuff ...
+                },
+            },
+
+            mango => {
+                run => sub {
+                    my $context = shift;
+                    
+                    # ... do mango stuff ..
+                },
+            },
+        },
+    )
+
+    # The above will allow the following (example) usage:
+    #
+    # ./script --apple mango
+    # ./script grape --banana ripe
+    # ./script --apple grape --banana ripe
+
+
+=head1 DESCRIPTION
+
+Getopt::Chain can be used to provide C<svn>- and C<git>-style option and subcommand processing. Any option specification
+covered by L<Getopt::Long> is fair game.
+
+This code is very, very new, so the API *might* change. Let me know if you're using it and have any suggestions.
+
+TODO: Option descriptions (like L<Getopt::Long::Descriptive>) and constraints (validation).
+
+CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
+pass_through). However, if a subcommand has an option with the same name or alias as an option for a parent, then that option won't be available
+for the subcommand. For example:
+
+    ./script --apple 1 <subcommand> --apple
+    # Getopt::Chain will not associate the second --apple with <subcommand>
+
+So, for now, try to use distinct option names/aliases :)
+
+=head1 METHODS
+
+=head2 Getopt::Chain->process( <arguments>, ... )
+
+<arguments> should be an ARRAY reference
+
+=head2 Getopt::Chain->process( ... )
+
+@ARGV will be used for <arguments>
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.001_1';
 
 use Moose;
 use Getopt::Chain::Carp;
@@ -21,7 +93,6 @@ use Getopt::Chain::Carp;
 use Getopt::Chain::Context;
 
 use Getopt::Long qw/GetOptionsFromArray/;
-use XXX -dumper;
 
 has options => qw/is ro/;
 
@@ -184,6 +255,14 @@ sub _handle_error {
 _handle_error_croak:
     croak "$description ($event)";
 }
+
+=head1 SEE ALSO
+
+L<Getopt::Long>
+
+L<App::Cmd>
+
+L<MooseX::App::Cmd>
 
 =head1 AUTHOR
 
