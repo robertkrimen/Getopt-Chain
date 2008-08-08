@@ -5,7 +5,7 @@ use strict;
 
 =head1 NAME
 
-Getopt::Chain - The great new Getopt::Chain!
+Getopt::Chain - svn- and git-style option and subcommand processing
 
 =head1 VERSION
 
@@ -23,9 +23,9 @@ use Getopt::Chain::Context;
 use Getopt::Long qw/GetOptionsFromArray/;
 use XXX -dumper;
 
-has options => qw/is rw isa HashRef/;
+has options => qw/is ro/;
 
-has schema => qw/is rw isa Maybe[HashRef]/;
+has schema => qw/is ro isa Maybe[HashRef]/;
 has _getopt_long_options => qw/is rw isa ArrayRef/;
 
 has commands => qw/is rw isa Maybe[HashRef]/;
@@ -41,12 +41,10 @@ sub BUILD {
     my $given = shift;
 
     my $commands = $self->_parse_commands($self->commands);
-
     my ($schema, $getopt_long_options) = $self->_parse_schema($self->options);
 
-    $self->commands($commands);
-
-    $self->schema($schema);
+    $self->{commands} = $commands;
+    $self->{schema} = $schema;
     $self->_getopt_long_options($getopt_long_options);
 }
 
@@ -70,6 +68,7 @@ sub _parse_schema {
 
     my %schema;
     my @getopt_long_options;
+    $schema = { map { $_ => undef } @$schema } if ref $schema eq "ARRAY";
 
     while (my ($specification, $more) = each %$schema) {
 
