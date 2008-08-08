@@ -9,7 +9,11 @@ Getopt::Chain - svn- and git-style option and subcommand processing
 
 =head1 VERSION
 
-Version 0.001_1
+Version 0.001_2
+
+=cut
+
+our $VERSION = '0.001_2';
 
 =head1 SYNPOSIS 
 
@@ -84,8 +88,6 @@ So, for now, try to use distinct option names/aliases :)
 @ARGV will be used for <arguments>
 
 =cut
-
-our $VERSION = '0.001_1';
 
 use Moose;
 use Getopt::Chain::Carp;
@@ -267,6 +269,14 @@ L<MooseX::App::Cmd>
 =head1 AUTHOR
 
 Robert Krimen, C<< <rkrimen at cpan.org> >>
+
+=head1 SOURCE
+
+You can contribute or fork this project via GitHub:
+
+L<http://github.com/robertkrimen/getopt-chain/tree/master>
+
+    git clone git://github.com/robertkrimen/getopt-chain.git Getopt-Chain
 
 =head1 BUGS
 
