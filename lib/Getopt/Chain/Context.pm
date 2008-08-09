@@ -61,12 +61,12 @@ has command => qw/is ro required 1 isa Maybe[Str]/;
 
 has options => qw/is ro required 1 isa HashRef/;
 
-has arguments => qw/is ro required 1 isa ArrayRef accessor _arguments/;
+has arguments => qw/required 1 isa ArrayRef reader _arguments/;
 sub arguments {
     return @{ shift->_arguments };
 }
 
-has remaining_arguments => qw/is ro required 1 isa ArrayRef accessor _remaining_arguments/;
+has remaining_arguments => qw/required 1 isa ArrayRef reader _remaining_arguments/;
 sub remaining_arguments {
     return @{ shift->_remaining_arguments };
 }
