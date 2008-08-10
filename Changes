@@ -1,3 +1,6 @@
+0.001_3 Saturday August 09 10:09:44 PDT 2008:
+    - Update to work with the latest Moose (reader ... instead of is ...)
+
 0.001_2 Friday August 08 16:09:53 PDT 2008:
     - Added SOURCE information
 

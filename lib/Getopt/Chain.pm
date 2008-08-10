@@ -9,11 +9,11 @@ Getopt::Chain - svn- and git-style option and subcommand processing
 
 =head1 VERSION
 
-Version 0.001_2
+Version 0.001_3
 
 =cut
 
-our $VERSION = '0.001_2';
+our $VERSION = '0.001_3';
 
 =head1 SYNPOSIS 
 
@@ -175,7 +175,8 @@ sub process {
     my $remaining_arguments = [ @$arguments ]; # This array will eventually contain leftover arguments
 
     my $context = $given{context} ||= Getopt::Chain::Context->new;
-    $context->push(processor => $self, command => $given{command}, arguments => $arguments, remaining_arguments => $remaining_arguments, options => \%options);
+    $context->push(processor => $self, command => $given{command},
+                    arguments => $arguments, remaining_arguments => $remaining_arguments, options => \%options);
 
     eval {
         if (my $getopt_long_options = $self->_getopt_long_options) {
