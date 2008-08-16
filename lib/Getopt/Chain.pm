@@ -42,7 +42,7 @@ our $VERSION = '0.003';
                 options => [qw/ quiet|q --template=s /]
                 run => sub {
                     my $context = shift;
-                    my @arguments = @_; # Again, remaining upparsed arguments 
+                    my @arguments = @_; # Again, remaining unparsed arguments 
 
                     # ... do init stuff ...
                 }
@@ -68,8 +68,8 @@ our $VERSION = '0.003';
     # The above will allow the following (example) usage:
     #
     # ./script --version
-    # ./script --git-dir path-to-repository init
-    # ./script --git-dir path-to-repository commit -a --message '...'
+    # ./script --git-dir path/to/repository init
+    # ./script --git-dir path/to/repository commit -a --message '...'
     # ./script commit -m '~'
 
 
@@ -104,7 +104,7 @@ arguments (left after option parsing) as the rest of @_
 
 A third parameter exists, <commands> in which you associate a <name> with a command, consisting (recursively) of <options>, <run>, and <commands>
 
-The <name> indicates what should be typed on the command-line to "trigger" the command (essentially a non-dashed argument). All-in-all, a configuration
+The <name> indicates what should be typed on the command-line to "trigger" the command. All-in-all, a configuration
 looks something like this:
 
     options => [ ... ]
@@ -137,7 +137,7 @@ Alongside <options>, <run>, and <commands>, you can designate a third parameter,
 
 This is an error handler for dealing with the following situations:
 
-    option_processing_error     A L<Getopt::Long> parsing error 
+    option_processing_error     A Getopt::Long parsing error 
 
     have_remainder              When a dash or dash-dash string remains on the argument stack without being processed 
 
@@ -349,6 +349,8 @@ use MooseX::MakeImmutable;
 MooseX::MakeImmutable->lock_down;
 
 =head1 SEE ALSO
+
+L<Getopt::Chain::Context>
 
 L<Getopt::Long>
 

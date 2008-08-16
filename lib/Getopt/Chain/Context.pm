@@ -120,6 +120,10 @@ Immediately exit the process with exit code of -1
 
 If the optional ... (message) is given, then print that out to STDERR first
 
+=head1 SEE ALSO
+
+L<Getopt::Chain>
+
 =cut
 
 use Hash::Param;
