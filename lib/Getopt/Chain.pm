@@ -9,11 +9,11 @@ Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
 
 =head1 VERSION
 
-Version 0.001_3
+Version 0.002
 
 =cut
 
-our $VERSION = '0.001_3';
+our $VERSION = '0.002';
 
 =head1 SYNPOSIS 
 
@@ -22,66 +22,140 @@ our $VERSION = '0.001_3';
     use strict;
     use Getopt::Chain;
 
+    # A partial, pseudo-reimplementation of git(1):
+    
     Getopt::Chain->process(
 
-        options => [ qw/apple/ ],
+        options => [qw/ version bare git-dir=s /]
 
         run => sub {
             my $context = shift;
             my @arguments = @_; # Remaining, unparsed arguments
 
-            # ... do stuff before grape or mango stuff ...
+            # ... do stuff before any subcommand ...
 
-        },
+        }
 
         commands => {
 
-            grape => {
-                options => [ qw/banana:s/ ],
+            init => {
+                options => [qw/ quiet|q --template=s /]
                 run => sub {
                     my $context = shift;
-                    my @arguments = @_; # 
+                    my @arguments = @_; # Again, remaining upparsed arguments 
 
-                    # ... do grape stuff ...
-                },
-            },
+                    # ... do init stuff ...
+                }
+            }
 
-            mango => {
+            commit => {
+                options => [qw/ all|a message|m=s /]
                 run => sub {
                     my $context = shift;
                     
-                    # ... do mango stuff ..
-                },
-            },
-        },
+                    # ... do commit stuff ..
+                }
+            }
+
+            add => ...
+
+            help => ...
+
+            ...
+        }
     )
 
     # The above will allow the following (example) usage:
     #
-    # ./script --apple mango
-    # ./script grape --banana ripe
-    # ./script --apple grape --banana ripe
+    # ./script --version
+    # ./script --git-dir path-to-repository init
+    # ./script --git-dir path-to-repository commit -a --message '...'
+    # ./script commit -m '~'
 
 
 =head1 DESCRIPTION
 
-Getopt::Chain can be used to provide C<svn>- and C<git>-style option and subcommand processing. Any option specification
+Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
 covered by L<Getopt::Long> is fair game.
 
-This code is very, very new, so the API *might* change. Let me know if you're using it and have any suggestions.
-
-TODO: Option descriptions (like L<Getopt::Long::Descriptive>) and constraints (validation).
+TODO: Default values, option descriptions (like L<Getopt::Long::Descriptive>) and constraints (validation).
 
 CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
 pass_through). However, if a subcommand has an option with the same name or alias as an option for a parent, then that option won't be available
 for the subcommand. For example:
 
-    ./script --apple 1 <subcommand> --apple
-    # Getopt::Chain will not associate the second --apple with <subcommand>
+    ./script --verbose --revision 36 edit --revision 48 --file xyzzy.c
+    # Getopt::Chain will not associate the second --revision with "edit"
 
 So, for now, try to use distinct option names/aliases :)
 
-=head1 Configuration
+Finally, this code fairly new so aspects of the API *might* change (particularly abort/error-handling). Let me know if you're using it and have any suggestions.
+
+=head1 Basic configuration
+
+A Getopt::Chain configuration is pretty straightforward
+
+Essentially you declare a command, which consists of (optional) <options> and an (optional) <run> subroutine (a CODE reference)
+
+<options> should be an ARRAY reference consisting of a L<Getopt::Long> specification
+
+<run> should be a CODE reference which is a subroutine that accepts a L<Getopt::Chain::Context> as the first argument and any remaining command-line
+arguments (left after option parsing) as the rest of @_
+
+A third parameter exists, <commands> in which you associate a <name> with a command, consisting (recursively) of <options>, <run>, and <commands>
+
+The <name> indicates what should be typed on the command-line to "trigger" the command (essentially a non-dashed argument). All-in-all, a configuration
+looks something like this:
+
+    options => [ ... ]
+
+    run => sub {}
+
+    commands => {
+
+        <name1> => {
+
+            options => [ ... ]
+
+            run => sub {}
+
+            commands => ...
+        },
+
+        <name2> => {
+            ...
+        },
+
+        ... Rinse, repeat, etc.
+    }
+
+See SYNPOSIS for an example
+
+=head1 Error-handling configuration
+
+Alongside <options>, <run>, and <commands>, you can designate a third parameter, <error> which is a either a CODE or HASH reference
+
+This is an error handler for dealing with the following situations:
+
+    option_processing_error     A L<Getopt::Long> parsing error 
+
+    have_remainder              When a dash or dash-dash string remains on the argument stack without being processed 
+
+    unknown_command             When you've indicated that you want to accept a command but the user entered an unknown one
+
+You can either give a single subroutine to deal with all three, or give a HASH with:
+
+=over
+
+=item A subroutine for dealing with that specific error
+
+=item A value of '0' for disabling/ignoring that error
+
+=back
+
+For more detail (for now), look at the source:
+
+    perldoc -m Getopt::Chain
 
 =head1 METHODS
 
@@ -89,9 +163,13 @@ So, for now, try to use distinct option names/aliases :)
 
 <arguments> should be an ARRAY reference
 
+... should consist of a Getopt::Chain configuration
+
 =head2 Getopt::Chain->process( ... )
 
 @ARGV will be used for <arguments>
+
+... should consist of a Getopt::Chain configuration
 
 =cut
 
@@ -176,7 +254,7 @@ sub process {
         return $self->new(@_)->process(@process);
     }
     my $arguments = shift;
-    my %given = @_;
+    my %given = 1 == @_ && ref $_[0] eq "HASH" ? %{ $_[0] } : @_;
 
     my %options;
     $arguments = [ @ARGV ] unless $arguments;

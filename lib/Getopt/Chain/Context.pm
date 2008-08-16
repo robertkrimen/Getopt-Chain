@@ -6,11 +6,19 @@ use warnings;
 use Moose;
 use Getopt::Chain::Carp;
 
-=head1 NAME Getopt::Chain::Context
+=head1 NAME
 
-=head1 SYNPOSIS
+Getopt::Chain::Context - Per-command context
 
 =head1 DESCRIPTION
+
+A context encapsulates the current state of execution, including:
+
+    The name of the current command (or undef if at the "root")
+    Every option parsed so far
+    Options local to the current command
+    The arguments as they were BEFORE parsing options for this command
+    The arguments remaining AFTER parsing options for this command
 
 =head1 METHODS
 
@@ -28,21 +36,26 @@ Returns the name of the current command (or undef in a special case)
 
 Returns the value of the option for <name> 
 
-<name> should be primary name of the option (see L<Getopt::Long>)
+<name> should be primary name of the option (see L<Getopt::Long> for more information
+on primary/alias naming)
 
 If called in list context and the value of option is an ARRAY reference,
-then this method returns a list (and an ARRAY reference in scalar context).
+then this method returns a list:
 
     ./script --exclude apple --exclude banana --exclude --cherry
     ...
     my @exclude = $context->option( exclude )
 
-=head2 $context->option( <name>, <name>, ... )
+See L<Hash::Param> for more usage information
+
+=head2 $context->options( <name>, <name>, ... )
 
 Similar to ->option( <name> ) except for many-at-once
 
 Returns a list in list context, and an ARRAY reference otherwise (you could
 end up with a LoL situation in that case)
+
+See L<Hash::Param> for more usage information
 
 =head2 $context->options
 
@@ -54,18 +67,58 @@ Returns the option HASH reference in scalar context
     ...
     if ( $context->options->{verbose} ) { ... }
 
-=head2 $context->all_options
+See L<Hash::Param> for more usage information
 
-# TODO Need a better name for this, maybe:
+=head2 $context->local_option
 
-    global_option(s) 
-    every_
+=head2 $context->local_options
+
+Behave similarly to ->option and ->options, except only cover options local to the current command
+
+    ./script --verbose edit --file xyzzy.c
+    $context->local_option( file ) # Returns 'xyzzy.c'
+    $context->local_option( verbose ) # Doesn't return anything
+    $context->option( verbose ) # Returns 1
 
 =head2 $context->stash
 
+An initially empty  HASH reference that can be used for sharing inter-command information
+
+Similar to the stash in L<Catalyst>
+
 =head2 $context->arguments
 
+Returns a copy of the arguments (@ARGV) for the current command BEFORE option parsing
+
+Returns an ARRAY reference (still a copy) when called in scalar context
+
+    ./script --verbose edit --file xyzzy.c
+
+    # At the very beginning: 
+    $context->arguments # Returns ( --verbose edit --file xyzzy.c )
+
+    # In the "edit" subroutine:
+    $context->arguments # Returns ( edit --file xyzzy.c )
+
 =head2 $context->remaining_arguments
+
+Returns a copy of the remaining arguments (@ARGV) for the current command AFTER option parsing
+
+Returns an ARRAY reference (still a copy) when called in scalar context
+
+    ./script --verbose edit --file xyzzy.c
+
+    # At the very beginning: 
+    $context->arguments # Returns ( edit --file xyzzy.c )
+
+    # In the "edit" subroutine:
+    $context->arguments # Returns ( )
+
+=head2 $context->abort( [ ... ] )
+
+Immediately exit the process with exit code of -1
+
+If the optional ... (message) is given, then print that out to STDERR first
 
 =cut
 
@@ -167,6 +220,19 @@ for my $method (qw/processor command arguments remaining_arguments remainder val
         my $self = shift;
         return $self->link->$method(@_);
     };
+}
+
+sub abort {
+    my $self = shift;
+    print STDERR "$0: ";
+    if (@_) {
+        chomp $_[-1];
+        print STDERR join "", @_, "\n";
+    }
+    else {
+        print STDERR "Unknown error: aborting";
+    }
+    exit -1;
 }
 
 package Getopt::Chain::Context::Link;
