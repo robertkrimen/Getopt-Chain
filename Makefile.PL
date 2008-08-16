@@ -3,6 +3,8 @@ use inc::Module::Install;
 name 'Getopt-Chain';
 all_from 'lib/Getopt/Chain.pm';
 
+resources repository => 'http://github.com/robertkrimen/getopt-chain/tree/master';
+
 {
     require ExtUtils::MakeMaker;
     use strict;
@@ -18,14 +20,15 @@ all_from 'lib/Getopt/Chain.pm';
 
 {
     map { my ($pk, $vr) = split m/\s/; build_requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
-Test::More
 Test::Most
 _END_
 
     map { my ($pk, $vr) = split m/\s/; requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
 Getopt::Long 2.37
-Moose
 Carp::Clan::Share
+Hash::Param
+Moose
+MooseX::MakeImmutable 0.002
 _END_
 }
 

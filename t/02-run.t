@@ -24,7 +24,7 @@ $options = Getopt::Chain->process(\@arguments,
             options => [ qw/banana:s/ ],
             run => sub {
                 $run->(@_);
-                cmp_deeply($_[0]->options, { qw/banana cherry/ });
+                cmp_deeply(scalar $_[0]->options, { qw/banana cherry/ });
                 my $context = shift;
                 $context->run(qw/lime/);
             },
@@ -32,7 +32,7 @@ $options = Getopt::Chain->process(\@arguments,
 
         lime => sub {
             $run->(@_);
-            cmp_deeply($_[0]->options, { qw/banana cherry/ });
+            cmp_deeply(scalar $_[0]->options, { qw/banana cherry/ });
         },
     },
 );

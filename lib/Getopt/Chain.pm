@@ -5,7 +5,7 @@ use strict;
 
 =head1 NAME
 
-Getopt::Chain - svn- and git-style option and subcommand processing
+Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
 
 =head1 VERSION
 
@@ -25,18 +25,22 @@ our $VERSION = '0.001_3';
     Getopt::Chain->process(
 
         options => [ qw/apple/ ],
+
         run => sub {
             my $context = shift;
+            my @arguments = @_; # Remaining, unparsed arguments
 
             # ... do stuff before grape or mango stuff ...
 
         },
+
         commands => {
 
             grape => {
                 options => [ qw/banana:s/ ],
                 run => sub {
                     my $context = shift;
+                    my @arguments = @_; # 
 
                     # ... do grape stuff ...
                 },
@@ -76,6 +80,8 @@ for the subcommand. For example:
     # Getopt::Chain will not associate the second --apple with <subcommand>
 
 So, for now, try to use distinct option names/aliases :)
+
+=head1 Configuration
 
 =head1 METHODS
 
@@ -124,6 +130,8 @@ sub BUILD {
 sub _parse_commands {
     my $self = shift;
     my $commands = shift;
+
+    return unless $commands;
 
     my $class = ref $self;
 
@@ -258,6 +266,9 @@ sub _handle_error {
 _handle_error_croak:
     croak "$description ($event)";
 }
+
+use MooseX::MakeImmutable;
+MooseX::MakeImmutable->lock_down;
 
 =head1 SEE ALSO
 
