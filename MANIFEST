@@ -19,6 +19,7 @@ lib/Getopt/Chain/Carp.pm
 lib/Getopt/Chain/Context.pm
 t/00-load.t
 t/01-basic.t
+t/02-run.t
 t/10-usage.t
 t/release/boilerplate.t
 t/release/pod-coverage.t

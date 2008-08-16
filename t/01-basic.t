@@ -84,3 +84,17 @@ $options = Getopt::Chain->process(\@arguments,
 );
 cmp_deeply($options, { qw/apple 1 banana cherry orange 1/ });
 cmp_deeply(\@path, [ undef, qw/grape lime mango berry/ ]);
+
+{
+    BEGIN {
+        *CORE::GLOBAL::exit = sub {
+            is(shift, -1);
+        };
+    }
+
+    Getopt::Chain->process([],
+        run => sub {
+            shift->abort("Abort test");
+        },
+    );
+}

@@ -226,8 +226,9 @@ sub abort {
     my $self = shift;
     print STDERR "$0: ";
     if (@_) {
-        chomp $_[-1];
-        print STDERR join "", @_, "\n";
+        my @__ = @_; # Modification of read-only value ...
+        chomp $__[-1];
+        print STDERR join "", @__, "\n";
     }
     else {
         print STDERR "Unknown error: aborting";
