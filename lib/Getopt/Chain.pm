@@ -218,7 +218,7 @@ sub process {
         }
     }
 
-    return $context->all_options;
+    return $context->options;
 }
 
 sub _handle_option_processing_error {

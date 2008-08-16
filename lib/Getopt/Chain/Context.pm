@@ -69,9 +69,21 @@ Returns the option HASH reference in scalar context
 
 =cut
 
-has chain => qw/is ro isa ArrayRef/, default => sub { [] };
+use Hash::Param;
 
-has all_options => qw/is ro isa HashRef/, default => sub { {} };
+has options => qw/reader _options lazy_build 1 isa HashRef/;
+sub _build_options {
+    my $self = shift;
+    return {};
+}
+
+has options_ => qw/is ro isa Hash::Param lazy_build 1/, handles => {qw/option param options params/};
+sub _build_options_ {
+    my $self = shift;
+    return Hash::Param->new(params => $self->_options);
+}
+
+has chain => qw/is ro isa ArrayRef/, default => sub { [] };
 
 has stash => qw/is ro isa HashRef/, default => sub { {} };
 
@@ -117,11 +129,12 @@ sub update {
     my $self = shift;
 
     my $link = $self->link;
-    my $options = $link->options;
-    my $all_options = $self->all_options;
 
-    for my $key (keys %$options) {
-        $all_options->{$key} = $options->{$key};
+    my $local_options = $self->local_options_;
+    my $options = $self->options_;
+
+    for my $key ($local_options->params) {
+        $options->param($key => scalar $local_options->param($key));
     }
 }
 
@@ -133,7 +146,22 @@ sub link {
     return $self->chain->[$at];
 }
 
-for my $method (qw/processor command options arguments remaining_arguments remainder valid/) {
+sub local_option {
+    my $self = shift;
+    return $self->link->option(@_);
+}
+
+sub local_options {
+    my $self = shift;
+    return $self->link->options(@_);
+}
+
+sub local_options_ {
+    my $self = shift;
+    return $self->link->options_(@_);
+}
+
+for my $method (qw/processor command arguments remaining_arguments remainder valid/) {
     no strict 'refs';
     *$method = sub {
         my $self = shift;
@@ -144,6 +172,9 @@ for my $method (qw/processor command options arguments remaining_arguments remai
 package Getopt::Chain::Context::Link;
 
 use Moose;
+use Getopt::Chain::Carp;
+
+use Hash::Param;
 
 has context => qw/is ro required 1 isa Getopt::Chain::Context/, handles => [qw/all_options/];
 
@@ -152,6 +183,12 @@ has processor => qw/is ro required 1 isa Getopt::Chain/;
 has command => qw/is ro required 1 isa Maybe[Str]/;
 
 has options => qw/reader _options required 1 isa HashRef/;
+
+has options_ => qw/is ro isa Hash::Param lazy_build 1/, handles => {qw/option param options params/};
+sub _build_options_ {
+    my $self = shift;
+    return Hash::Param->new(params => $self->_options);
+}
 
 has arguments => qw/is ro reader _arguments required 1 isa ArrayRef/;
 sub arguments {
@@ -170,6 +207,10 @@ sub remainder {
 }
 
 has valid => qw/is rw/;
+
+1;
+
+__END__
 
 sub options {
     my $self = shift;
