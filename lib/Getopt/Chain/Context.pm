@@ -109,10 +109,10 @@ Returns an ARRAY reference (still a copy) when called in scalar context
     ./script --verbose edit --file xyzzy.c
 
     # At the very beginning: 
-    $context->arguments # Returns ( edit --file xyzzy.c )
+    $context->remaining_arguments # Returns ( edit --file xyzzy.c )
 
     # In the "edit" subroutine:
-    $context->arguments # Returns ( )
+    $context->remaining_arguments # Returns ( )
 
 =head2 $context->abort( [ ... ] )
 

@@ -9,11 +9,11 @@ Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
 
 =head1 VERSION
 
-Version 0.002
+Version 0.003
 
 =cut
 
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 
 =head1 SYNPOSIS 
 
