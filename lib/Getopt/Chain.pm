@@ -9,11 +9,11 @@ Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
 
 =head1 VERSION
 
-Version 0.003
+Version 0.004
 
 =cut
 
-our $VERSION = '0.003';
+our $VERSION = '0.004';
 
 =head1 SYNPOSIS 
 
@@ -78,8 +78,6 @@ our $VERSION = '0.003';
 Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
 covered by L<Getopt::Long> is fair game.
 
-TODO: Default values, option descriptions (like L<Getopt::Long::Descriptive>) and constraints (validation).
-
 CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
 pass_through). However, if a subcommand has an option with the same name or alias as an option for a parent, then that option won't be available
 for the subcommand. For example:
@@ -90,6 +88,8 @@ for the subcommand. For example:
 So, for now, try to use distinct option names/aliases :)
 
 Finally, this code fairly new so aspects of the API *might* change (particularly abort/error-handling). Let me know if you're using it and have any suggestions.
+
+TODO: Default values, option descriptions (like L<Getopt::Long::Descriptive>) and constraints (validation).
 
 =head1 Basic configuration
 

@@ -21,6 +21,7 @@ resources repository => 'http://github.com/robertkrimen/getopt-chain/tree/master
 {
     map { my ($pk, $vr) = split m/\s/; build_requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
 Test::Most
+Test::Trap
 _END_
 
     map { my ($pk, $vr) = split m/\s/; requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
@@ -28,7 +29,7 @@ Getopt::Long 2.37
 Carp::Clan::Share
 Hash::Param
 Moose
-MooseX::MakeImmutable 0.002
+MooseX::MakeImmutable 0.02
 _END_
 }
 

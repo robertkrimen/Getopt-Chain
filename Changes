@@ -1,3 +1,6 @@
+0.004 Saturday August 16 20:02:09 PDT 2008:
+    - Using Test::Trap for exit error code checking
+
 0.003 Saturday August 16 15:07:24 PDT 2008: 
     - Minor documentation fix
 
