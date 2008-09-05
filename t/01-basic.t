@@ -93,3 +93,18 @@ trap {
     );
 };
 is($trap->exit, -1);
+
+@arguments = qw/--apple grape 1 2 3 4 5/;
+$options = Getopt::Chain->process(\@arguments, 
+    options => [ qw/apple/ ],
+    run => $run,
+    commands => {
+        grape => {
+            options => [ qw/banana:s/ ],
+            run => sub {
+                my $context = shift;
+                cmp_deeply(\@_, [qw/1 2 3 4 5/]);
+            },
+        },
+    },
+);

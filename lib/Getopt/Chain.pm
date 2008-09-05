@@ -9,11 +9,11 @@ Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
 
 =head1 VERSION
 
-Version 0.004
+Version 0.005
 
 =cut
 
-our $VERSION = '0.004';
+our $VERSION = '0.005';
 
 =head1 SYNPOSIS 
 
@@ -280,7 +280,7 @@ sub process {
 
     $context->valid($self->validate->($context)) if $self->validate;
 
-    $self->run->($context) if $self->run;
+    $self->run->($context, @$remaining_arguments) if $self->run;
 
     if (my $commands = $self->commands) {
         my @arguments = @$remaining_arguments;
