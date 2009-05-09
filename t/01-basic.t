@@ -3,9 +3,42 @@ use warnings;
 
 use Test::Trap;
 use Test::Most;
+
 plan qw/no_plan/;
 
 use Getopt::Chain;
+use Getopt::Chain::Builder;
+use Getopt::Chain::Context;
+
+my $builder = Getopt::Chain::Builder->new;
+$builder->start( [qw/ a1 b2:s /] );
+$builder->on( apple => [qw/ c3 /], sub {
+    my $context = shift;
+    
+} );
+
+my @arguments = qw/--a1 apple/;
+{
+    my $context = Getopt::Chain::Context->new( arguments => [ @arguments ] );
+    $builder->dispatcher->run( '', $context );
+    is( $context->option( 'a1' ), 1 );
+}
+
+__END__
+
+my $builder = Getopt::Chain::Builder->new;
+$builder->start( [qw/ a1 b2:s /] );
+$builder->on( apple => [qw/ c3 /], sub {
+    
+} );
+
+my @argument_schema = $builder->argument_dispatch( 'apple' );
+warn "@argument_schema";
+cmp_deeply( \@argument_schema, [ qw/a1 b2:s c3/ ] );
+
+ok( 1 );
+
+__END__
 
 my (@arguments, $options, @path);
 

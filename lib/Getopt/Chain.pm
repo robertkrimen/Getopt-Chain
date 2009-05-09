@@ -176,6 +176,8 @@ For more detail (for now), look at the source:
 use Moose;
 use Getopt::Chain::Carp;
 
+__END__
+
 use Getopt::Chain::Context;
 
 use Getopt::Long qw/GetOptionsFromArray/;

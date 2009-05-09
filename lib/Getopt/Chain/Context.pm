@@ -6,6 +6,51 @@ use warnings;
 use Moose;
 use Getopt::Chain::Carp;
 
+use Getopt::Long qw/GetOptionsFromArray/;
+use Hash::Param;
+
+#has options => qw/reader _options lazy_build 1 isa HashRef/;
+#sub _build_options {
+#    my $self = shift;
+#    return {};
+#}
+
+has _options => qw/is ro isa Hash::Param lazy_build 1/, handles => {qw/option param options params/};
+sub _build__options {
+    my $self = shift;
+#    return Hash::Param->new(params => $self->_options);
+    return Hash::Param->new(params => {});
+}
+
+has stash => qw/is ro isa HashRef/, default => sub { {} };
+has arguments => qw/is ro required 1 lazy 1 isa ArrayRef/, default => sub { [] };
+
+sub consume_arguments {
+    my $self = shift;
+    my $argument_schema = shift;
+
+    my $remaining_arguments = $self->arguments;
+
+    my %options;
+    eval {
+        if ($argument_schema && @$argument_schema) {
+            Getopt::Long::Configure(qw/pass_through/);
+            GetOptionsFromArray($remaining_arguments, \%options, @$argument_schema);
+        }
+    };
+    croak "There was an error processing arguments: $@" if $@;
+
+    if (@$remaining_arguments && $remaining_arguments->[0] =~ m/^--\w/) {
+        croak "Have remainder arguments after processing: ", $remaining_arguments->[0];
+    }
+
+    $self->options( \%options );
+}
+
+1;
+
+__END__
+
 =head1 NAME
 
 Getopt::Chain::Context - Per-command context
