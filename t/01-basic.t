@@ -51,33 +51,6 @@ $builder->on( apple => [qw/ c3 /], sub {
     ok( $options{apple} );
 }
 
-#{
-#    my $context = Getopt::Chain::Context->new( arguments => [ @arguments ] );
-#    $builder->dispatcher->run( '', $context );
-
-#    ok( $context->option( 'a1' ) );
-#    ok( !$context->option( 'c3' ) );
-
-#    my (@path, @arguments, $path_part);
-#    while( $path_part =$context->next_path_argument ) {
-#        push @path, $path_part;
-#        $builder->dispatcher->run( join( ' ', @path ) , $context );
-#    }
-
-#    ok( $context->option( 'a1' ) );
-#    ok( $context->option( 'c3' ) );
-#    ok( $context->option( 'apple' ) );
-#}
-
-#{
-#    my $runner = Getopt::Chain->new( dispatcher => $builder->dispatcher );
-#    $runner->run( [ @arguments ] );
-
-#    ok( $options{a1} );
-#    ok( $options{c3} );
-#    ok( $options{apple} );
-#}
-
 __END__
 
 my $builder = Getopt::Chain::Builder->new;

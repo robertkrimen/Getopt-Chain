@@ -20,19 +20,20 @@ sub start {
 sub on {
     my $self = shift;
     my $path = shift;
+    my $argument_schema = shift;
+    my $run = shift;
 
-    my ($argument_schema, $run);
-    if (defined $_[0] && ref $_[0] eq '' || ref $_[0] eq 'ARRAY') {
-        $argument_schema = shift;
-    }
-    if (defined $_[0] && ref $_[0] eq 'CODE') {
-        $run = shift;
-    }
-    elsif (@_) {
-        croak "Don't understand arguments (@_)";
-    }
+#    if (defined $_[0] && ref $_[0] eq '' || ref $_[0] eq 'ARRAY') {
+#        $argument_schema = shift;
+#    }
+#    if (defined $_[0] && ref $_[0] eq 'CODE') {
+#        $run = shift;
+#    }
+#    elsif (@_) {
+#        croak "Don't understand arguments (@_)";
+#    }
 
-    $self->builder->on( $path, sub {
+    $self->builder->on( [ split m/\s/, $path ], sub { # The builder should do the split for us!
         my $context = shift;
         $context->run_step( $argument_schema, $run );
     } );

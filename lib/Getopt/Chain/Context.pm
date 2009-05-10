@@ -7,8 +7,13 @@ use Moose;
 use MooseX::AttributeHelpers;
 use Getopt::Chain::Carp;
 
+use Getopt::Chain;
+
 use Getopt::Long qw/GetOptionsFromArray/;
 use Hash::Param;
+
+use constant DEBUG => Getopt::Chain->DEBUG;
+our $DEBUG = DEBUG;
 
 # Should probably move these into Getopt::Chain
 # ...or even... Getopt::Longer :)
@@ -89,6 +94,8 @@ sub next {
         $self->initialize_run;
     }
 
+    warn "Context::next ", $self->path_as_string if $DEBUG;
+
     $self->dispatcher->run( join( ' ', $self->path ) , $self ); # This will (indirectly) call ->run_step( ... ) below
     my $next_path_part;
     $self->push_path( $next_path_part ) if $next_path_part = $self->next_path_part;
@@ -99,14 +106,21 @@ sub next_path_part {
     my $self = shift;
 
     return unless defined (my $argument = $self->first_remaining_argument);
-    croak "Have remainder arguments after option-processing: ", $argument if is_option_like $argument;
+    croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", $self->remaining_arguments, "]" if is_option_like $argument;
     return $self->shift_remaining_argument;
+}
+
+sub path_as_string {
+    my $self = shift;
+    return  join '/', '^START', $self->path;
 }
 
 sub run_step { # Called from within the Path::Dispatcher rule
     my $self = shift;
     my $argument_schema = shift;
     my $run = shift;
+
+    $argument_schema = [] unless defined $argument_schema;
     
     my $step = $self->add_step( argument_schema => $argument_schema, run => $run ); 
     $step->run;
@@ -120,6 +134,11 @@ sub add_step {
     my $step = Getopt::Chain::Context::Step->new( context => $self, parent => $parent, path => [ $self->path ], arguments => [ $self->remaining_arguments ], %given );
     $self->push_step( $step );
     return $step;
+}
+
+sub command {
+    my $self = shift;
+    return $self->last_step->last_path_part;
 }
 
 sub local_option {
@@ -164,6 +183,7 @@ has run => qw/is ro reader _run isa Maybe[CodeRef]/;
 
 has _path => qw/metaclass Collection::Array is ro required 1 lazy 1 isa ArrayRef init_arg path/, default => sub { [] }, provides => {qw/
     elements    path
+    last        last_path_part
     push        push_path
 /};
 
@@ -175,7 +195,16 @@ sub run {
     my $options = {};
     my $arguments = [ $self->arguments ];
     my $argument_schema = [ $self->argument_schema ];
-    $options = Getopt::Chain::Context::consume_arguments $argument_schema, $arguments;
+
+    warn "Context::Step::run ", $self->context->path_as_string, " [@$arguments] {@$argument_schema}" if $DEBUG;
+
+    eval {
+        $options = Getopt::Chain::Context::consume_arguments $argument_schema, $arguments;
+    };
+    if ($@) {
+        chomp( my $error = $@ );
+        croak "At ", join( '/', $self->path ), " with arguments [@$arguments]: $@";
+    }
     $self->context->_remaining_arguments( $arguments );
 
     while (my ($key, $value) = each %$options) {
@@ -184,7 +213,7 @@ sub run {
     }
 
     my $run = $self->_run;
-    $run->( $self->context ) if $run;
+    $run->( $self->context, @$arguments ) if $run;
 }
 
 1;
