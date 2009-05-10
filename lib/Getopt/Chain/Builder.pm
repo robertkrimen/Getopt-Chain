@@ -34,8 +34,7 @@ sub on {
 
     $self->builder->on( $path, sub {
         my $context = shift;
-        $context->consume_arguments( $argument_schema ) if $argument_schema;
-        $run->( $context ) if $run;
+        $context->run_step( $argument_schema, $run );
     } );
 }
 

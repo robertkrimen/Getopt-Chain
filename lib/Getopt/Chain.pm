@@ -176,6 +176,35 @@ For more detail (for now), look at the source:
 use Moose;
 use Getopt::Chain::Carp;
 
+use Getopt::Chain::Builder;
+use Getopt::Chain::Context;
+
+#has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher /];
+#sub _build_builder {
+#    return Getopt::Chain::Builder->new;
+#}
+has dispatcher => qw/is ro required 1/;
+
+sub run {
+    my $self = shift;
+    my $arguments = shift;
+
+    $arguments = [ @ARGV ] unless $arguments;
+
+    my $context = Getopt::Chain::Context->new( arguments => [ @$arguments ] );
+    my $dispatcher = $self->dispatcher;
+
+    $dispatcher->run( '', $context );
+
+    my (@path, @arguments, $path_part);
+    while( $path_part =$context->next_path_argument ) {
+        push @path, $path_part;
+        $dispatcher->run( join( ' ', @path ) , $context );
+    }
+}
+
+1;
+
 __END__
 
 use Getopt::Chain::Context;

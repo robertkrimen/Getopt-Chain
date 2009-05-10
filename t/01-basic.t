@@ -9,30 +9,74 @@ plan qw/no_plan/;
 use Getopt::Chain;
 use Getopt::Chain::Builder;
 use Getopt::Chain::Context;
+use XXX;
 
 my $builder = Getopt::Chain::Builder->new;
+my @arguments = qw/--a1 apple --c3/;
+my (%options);
+
 $builder->start( [qw/ a1 b2:s /] );
 $builder->on( apple => [qw/ c3 /], sub {
     my $context = shift;
+
+    $context->option( apple => 1 );
+
+    %options = %{ $context->options };
     
 } );
 
-my @arguments = qw/--a1 apple --c3/;
 {
-    my $context = Getopt::Chain::Context->new( arguments => [ @arguments ] );
-    $builder->dispatcher->run( '', $context );
+    my $context = Getopt::Chain::Context->new( dispatcher => $builder->dispatcher, arguments => [ @arguments ] );
+
+    $context->next;
 
     ok( $context->option( 'a1' ) );
     ok( !$context->option( 'c3' ) );
 
-    my (@path, @arguments);
-    while( @arguments = $context->arguments ) {
-        push @path, $context->next_path_argument;
-        $builder->dispatcher->run( join( ' ', @path ) , $context );
+    while( $context->next ) {
     }
 
+    ok( ! $context->local_option( 'a1' ) );
     ok( $context->option( 'c3' ) );
+    ok( $context->option( 'apple' ) );
 }
+
+{
+    my $context = Getopt::Chain::Context->new( dispatcher => $builder->dispatcher, arguments => [ @arguments ] );
+
+    $context->run;
+
+    ok( $options{a1} );
+    ok( $options{c3} );
+    ok( $options{apple} );
+}
+
+#{
+#    my $context = Getopt::Chain::Context->new( arguments => [ @arguments ] );
+#    $builder->dispatcher->run( '', $context );
+
+#    ok( $context->option( 'a1' ) );
+#    ok( !$context->option( 'c3' ) );
+
+#    my (@path, @arguments, $path_part);
+#    while( $path_part =$context->next_path_argument ) {
+#        push @path, $path_part;
+#        $builder->dispatcher->run( join( ' ', @path ) , $context );
+#    }
+
+#    ok( $context->option( 'a1' ) );
+#    ok( $context->option( 'c3' ) );
+#    ok( $context->option( 'apple' ) );
+#}
+
+#{
+#    my $runner = Getopt::Chain->new( dispatcher => $builder->dispatcher );
+#    $runner->run( [ @arguments ] );
+
+#    ok( $options{a1} );
+#    ok( $options{c3} );
+#    ok( $options{apple} );
+#}
 
 __END__
 
