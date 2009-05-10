@@ -17,11 +17,21 @@ $builder->on( apple => [qw/ c3 /], sub {
     
 } );
 
-my @arguments = qw/--a1 apple/;
+my @arguments = qw/--a1 apple --c3/;
 {
     my $context = Getopt::Chain::Context->new( arguments => [ @arguments ] );
     $builder->dispatcher->run( '', $context );
-    is( $context->option( 'a1' ), 1 );
+
+    ok( $context->option( 'a1' ) );
+    ok( !$context->option( 'c3' ) );
+
+    my (@path, @arguments);
+    while( @arguments = $context->arguments ) {
+        push @path, $context->next_path_argument;
+        $builder->dispatcher->run( join( ' ', @path ) , $context );
+    }
+
+    ok( $context->option( 'c3' ) );
 }
 
 __END__

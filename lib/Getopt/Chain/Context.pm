@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Moose;
+use MooseX::AttributeHelpers;
 use Getopt::Chain::Carp;
 
 use Getopt::Long qw/GetOptionsFromArray/;
@@ -23,28 +24,39 @@ sub _build__options {
 }
 
 has stash => qw/is ro isa HashRef/, default => sub { {} };
-has arguments => qw/is ro required 1 lazy 1 isa ArrayRef/, default => sub { [] };
+has arguments => qw/metaclass Collection::Array accessor _arguments required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
+    elements    arguments
+    shift       shift_argument
+    first       first_argument
+/};
 
 sub consume_arguments {
     my $self = shift;
     my $argument_schema = shift;
 
-    my $remaining_arguments = $self->arguments;
+    my $arguments = $self->_arguments;
 
     my %options;
     eval {
         if ($argument_schema && @$argument_schema) {
             Getopt::Long::Configure(qw/pass_through/);
-            GetOptionsFromArray($remaining_arguments, \%options, @$argument_schema);
+            GetOptionsFromArray($arguments, \%options, @$argument_schema);
         }
     };
-    croak "There was an error processing arguments: $@" if $@;
+    croak "There was an error option-processing arguments: $@" if $@;
 
-    if (@$remaining_arguments && $remaining_arguments->[0] =~ m/^--\w/) {
-        croak "Have remainder arguments after processing: ", $remaining_arguments->[0];
+    if (@$arguments && $arguments->[0] =~ m/^--\w/) {
+        croak "Have remainder arguments after option-processing: ", $arguments->[0];
     }
 
     $self->options( \%options );
+}
+
+sub next_path_argument {
+    my $self = shift;
+    return unless defined (my $argument = $self->first_argument);
+    return if $argument =~ m/^-/;
+    return $self->shift_argument;
 }
 
 1;
