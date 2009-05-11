@@ -3,6 +3,9 @@ package Getopt::Chain;
 use warnings;
 use strict;
 
+use constant DEBUG => 1;
+our $DEBUG = DEBUG;
+
 =head1 NAME
 
 Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
@@ -173,9 +176,6 @@ For more detail (for now), look at the source:
 
 =cut
 
-use constant DEBUG => 1;
-our $DEBUG = DEBUG;
-
 use Moose;
 use Getopt::Chain::Carp;
 
@@ -186,25 +186,6 @@ has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher /];
 sub _build_builder {
     return Getopt::Chain::Builder->new;
 }
-#has dispatcher => qw/is ro required 1/;
-
-#sub run {
-#    my $self = shift;
-#    my $arguments = shift;
-
-#    $arguments = [ @ARGV ] unless $arguments;
-
-#    my $context = Getopt::Chain::Context->new( arguments => [ @$arguments ] );
-#    my $dispatcher = $self->dispatcher;
-
-#    $dispatcher->run( '', $context );
-
-#    my (@path, @arguments, $path_part);
-#    while( $path_part =$context->next_path_argument ) {
-#        push @path, $path_part;
-#        $dispatcher->run( join( ' ', @path ) , $context );
-#    }
-#}
 
 sub parse {
     my $self = shift;
@@ -243,58 +224,20 @@ sub process {
         $self->parse( @_ );
         return $self->process(@process);
     }
+    return $self->run( @_ );
+}
+
+sub run {
+    my $self = shift;
     my $arguments = shift;
+
     $arguments = [ @ARGV ] unless $arguments;
 
     my $context = Getopt::Chain::Context->new( dispatcher => $self->dispatcher, arguments => $arguments );
     $context->run;
     return $context->options;
-
-#    my $arguments = shift;
-#    my %given = 1 == @_ && ref $_[0] eq "HASH" ? %{ $_[0] } : @_;
-
-#    my %options;
-#    $arguments = [ @ARGV ] unless $arguments;
-#    my $remaining_arguments = [ @$arguments ]; # This array will eventually contain leftover arguments
-
-#    my $context = $given{context} ||= Getopt::Chain::Context->new;
-#    $context->push(processor => $self, command => $given{command},
-#                    arguments => $arguments, remaining_arguments => $remaining_arguments, options => \%options);
-
-#    eval {
-#        if (my $getopt_long_options = $self->_getopt_long_options) {
-#            Getopt::Long::Configure(qw/pass_through/);
-#            GetOptionsFromArray($remaining_arguments, \%options, @$getopt_long_options);
-#        }
-#    };
-#    $self->_handle_option_processing_error($@, $context) if $@;
-
-#    $context->update;
-
-#    if (@$remaining_arguments && $remaining_arguments->[0] =~ m/^--\w/) {
-#        $self->_handle_have_remainder('Have remainder "' . $remaining_arguments->[0] . '"', $context);
-#    }
-
-#    $context->valid($self->validate->($context)) if $self->validate;
-
-#    $self->run->($context, @$remaining_arguments) if $self->run;
-
-#    if (my $commands = $self->commands) {
-#        my @arguments = @$remaining_arguments;
-#        my $command = shift @arguments;
-
-#        my $processor = $commands->{defined $command ? $command : 'DEFAULT'} || $commands->{DEFAULT};
-
-#        if ($processor) {
-#            return $processor->process(\@arguments, command => $command, context => $context);
-#        }
-#        elsif (defined $command) {
-#            $self->_handle_unknown_command("Unknown command \"$command\"", $context);
-#        }
-#    }
-
-#    return $context->options;
 }
+
 1;
 
 __END__

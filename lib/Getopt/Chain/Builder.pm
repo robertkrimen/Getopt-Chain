@@ -6,7 +6,7 @@ use Getopt::Chain::Carp;
 use Path::Dispatcher;
 use Path::Dispatcher::Builder;
 
-has builder => qw/is ro lazy_build 1/, handles => {qw/ dispatcher dispatcher /};
+has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher rewrite /];
 sub _build_builder {
     my $self = shift;
     return Path::Dispatcher::Builder->new;

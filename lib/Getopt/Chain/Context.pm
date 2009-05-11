@@ -75,6 +75,8 @@ has _path => qw/metaclass Collection::Array is ro required 1 lazy 1 isa ArrayRef
     push        push_path
 /};
 
+has pass_terminal => qw/is rw isa Bool default 0/;
+
 sub initialize_run {
     my $self = shift;
     $self->_remaining_arguments( [ $self->arguments ] );
@@ -105,7 +107,12 @@ sub next {
 sub next_path_part {
     my $self = shift;
 
-    return unless defined (my $argument = $self->first_remaining_argument);
+    my $argument;
+    unless (defined ($argument = $self->first_remaining_argument)) {
+        return if $self->pass_terminal;
+        $self->pass_terminal( 1 );
+        return '$';
+    }
     croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", $self->remaining_arguments, "]" if is_option_like $argument;
     return $self->shift_remaining_argument;
 }
