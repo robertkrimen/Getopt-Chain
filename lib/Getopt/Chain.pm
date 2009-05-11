@@ -3,7 +3,7 @@ package Getopt::Chain;
 use warnings;
 use strict;
 
-use constant DEBUG => $ENV{GETOPT_CHAIN_TRACE} ? 1 : 0;
+use constant DEBUG => $ENV{GOC_TRACE} ? 1 : 0;
 our $DEBUG = DEBUG;
 
 =head1 NAME

@@ -38,14 +38,20 @@ sub on {
         $matcher = $path;
     }
     elsif (! ref $path) {
-        $control{always_run} = 1 if $path eq '' && ! exists $given{always_run}; # The start rule
         # Also, check for '*', '$', etc. Ignore if literal => 1
-        $matcher = [ split m/\s+/, $path ];
+        if ($path eq '') { # The start rule, special case
+            $control{always_run} = 1 unless exists $given{always_run};
+            $matcher = [];
+        }
+        else {
+            $matcher = join '\s+', split m/\s+/, $path;
+            $matcher = qr/^\s*$matcher\s*$/; # Fuzzy matching?
+        }
+    
     }
     else {
         croak "Don't recogonize matcher ($path)";
     }
-
     $self->builder->on( $matcher, sub { # The builder should do the split for us!
         my $context = shift;
         return $context->run_step( $argument_schema, $run, { %control } );

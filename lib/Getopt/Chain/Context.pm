@@ -183,6 +183,9 @@ use Getopt::Chain::Carp;
 
 use Hash::Param;
 
+use constant DEBUG => Getopt::Chain->DEBUG;
+our $DEBUG = DEBUG;
+
 has context => qw/is ro required 1 isa Getopt::Chain::Context/;
 
 has _options => qw/is ro isa Hash::Param lazy_build 1/, handles => {qw/option param options params/};
@@ -217,7 +220,7 @@ sub run {
     my $arguments = [ $self->arguments ];
     my $argument_schema = [ $self->argument_schema ];
 
-    warn "Context::Step::run ", $self->context->path_as_string, " [@$arguments] {@$argument_schema}" if $DEBUG;
+    warn "Context::Step::run ", $self->context->path_as_string, " [@$arguments] {@$argument_schema}\n" if $DEBUG;
 
     eval {
         $options = Getopt::Chain::Context::consume_arguments $argument_schema, $arguments;
@@ -229,7 +232,10 @@ sub run {
 
     my $at_end = ! @$arguments;
 
-    return unless $at_end || $control->{always_run};
+    unless ($at_end || $control->{always_run}) {
+        warn "Context::Step::run ", $self->context->path_as_string, " SKIP\n" if DEBUG;
+        return;
+    }
 
     $self->context->_remaining_arguments( $arguments );
 

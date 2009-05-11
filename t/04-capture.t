@@ -13,7 +13,7 @@ use Getopt::Chain::Declare;
 
 start [qw/ a1 b2:s /];
 
-on [qw/ apple /] => [qw/ c3 /], sub {
+on apple => [qw/ c3 /], sub {
     my $context = shift;
 
     $context->option( apple => 1 );
@@ -36,11 +36,11 @@ my $app = t::App->new;
 
 ok( $app );
 
-#$options = $app->run( [ @arguments ] );
+$options = $app->run( [ @arguments ] );
 
-#ok( $options->{a1} );
-#ok( $options->{c3} );
-#ok( $options->{apple} );
+ok( $options->{a1} );
+ok( $options->{c3} );
+ok( $options->{apple} );
 
 $options = $app->run( [qw/ green banana 10 /] );
 ok( $options->{banana} );
