@@ -32,7 +32,8 @@ sub on {
     my $matcher;
     if (ref $path eq 'ARRAY') {
         # Also, check for '*', '$', etc. Ignore if literal => 1
-        $matcher = [ split m/\s+/, $path ];
+#        $matcher = [ split m/\s+/, $path ];
+        $matcher = $path;
     }
     elsif (ref $path eq 'Regexp') {
         $matcher = $path;

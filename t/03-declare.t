@@ -36,6 +36,12 @@ on help => undef, sub {
 #};
 
 under help => sub {
+    on [ [ qw/a b c/ ] ] => undef, sub {
+        my $context = shift;
+
+        $context->option( help_a_b_c => 1 );
+    };
+
     on 'xyzzy' => undef, sub {
         my $context = shift;
 
@@ -52,6 +58,13 @@ under help => sub {
         my $context = shift;
 
         $context->option( help_copying => 1 );
+    };
+
+    on qr/^(\S+)$/ => undef, sub {
+       my $context = shift;
+       my $topic = $1;
+
+        $context->option( no_help => $1 );
     };
 };
 
@@ -94,3 +107,17 @@ $options = $app->run( [qw/ copying /] );
 
 ok( ! $options->{help} );
 ok( $options->{help_copying} );
+
+$options = $app->run( [qw/ help a /] );
+
+ok( ! $options->{help} );
+ok( $options->{help_a_b_c} );
+
+$options = $app->run( [qw/ help c /] );
+
+ok( ! $options->{help} );
+ok( $options->{help_a_b_c} );
+
+$options = $app->run( [qw/ help d /] );
+
+is( $options->{no_help}, 'd' );
