@@ -14,7 +14,7 @@ sub _build_builder {
 
 sub start {
     my $self = shift;
-    $self->on( '' => @_ );
+    $self->on( '' => shift, shift);
 }
 
 sub on {
@@ -22,20 +22,33 @@ sub on {
     my $path = shift;
     my $argument_schema = shift;
     my $run = shift;
+    my %given = @_;
 
-#    if (defined $_[0] && ref $_[0] eq '' || ref $_[0] eq 'ARRAY') {
-#        $argument_schema = shift;
-#    }
-#    if (defined $_[0] && ref $_[0] eq 'CODE') {
-#        $run = shift;
-#    }
-#    elsif (@_) {
-#        croak "Don't understand arguments (@_)";
-#    }
+    my %control = (
+        always_process_arguments => 0,
+        always_run => $given{always_run} || 0,
+    );
+    
+    my $matcher;
+    if (ref $path eq 'ARRAY') {
+        # Also, check for '*', '$', etc. Ignore if literal => 1
+        $matcher = [ split m/\s+/, $path ];
+    }
+    elsif (ref $path eq 'Regexp') {
+        $matcher = $path;
+    }
+    elsif (! ref $path) {
+        $control{always_run} = 1 if $path eq '' && ! exists $given{always_run}; # The start rule
+        # Also, check for '*', '$', etc. Ignore if literal => 1
+        $matcher = [ split m/\s+/, $path ];
+    }
+    else {
+        croak "Don't recogonize matcher ($path)";
+    }
 
-    $self->builder->on( [ split m/\s/, $path ], sub { # The builder should do the split for us!
+    $self->builder->on( $matcher, sub { # The builder should do the split for us!
         my $context = shift;
-        $context->run_step( $argument_schema, $run );
+        return $context->run_step( $argument_schema, $run, { %control } );
     } );
 }
 

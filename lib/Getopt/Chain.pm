@@ -3,7 +3,7 @@ package Getopt::Chain;
 use warnings;
 use strict;
 
-use constant DEBUG => 1;
+use constant DEBUG => $ENV{GETOPT_CHAIN_TRACE} ? 1 : 0;
 our $DEBUG = DEBUG;
 
 =head1 NAME
@@ -205,7 +205,7 @@ sub _parse_command {
 
     my $path_as_string = join ' ', @$path;
     warn "Chain::_parse_command <$path_as_string>" if $DEBUG;
-    $self->builder->on( $path_as_string => ($schema->{options}, $schema->{run}) );
+    $self->builder->on( $path_as_string => ($schema->{options}, $schema->{run}), always_run => 1 );
 
     if ( my $commands = $schema->{commands} ) {
 

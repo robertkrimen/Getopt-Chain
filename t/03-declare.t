@@ -21,14 +21,13 @@ on apple => [qw/ c3 /], sub {
     $context->option( apple => 1 );
 };
 
-on 'help $' => undef, sub {
+on 'help' => undef, sub {
     my $context = shift;
 
     $context->option( help => 1 );
 };
 
-# Automatically put '$' unless '*' is at the end, then strip it!
-on 'help xyzzy $' => undef, sub {
+on 'help xyzzy' => undef, sub {
     my $context = shift;
 
     $context->option( help_xyzzy => 1 );

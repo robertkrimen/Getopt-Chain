@@ -68,14 +68,13 @@ has steps => qw/metaclass Collection::Array reader _steps required 1 lazy 1 isa 
     first       first_step
     last        last_step
     push        push_step
+    pop         pop_step
 /};
 
 has _path => qw/metaclass Collection::Array is ro required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
     elements    path
     push        push_path
 /};
-
-has pass_terminal => qw/is rw isa Bool default 0/;
 
 sub initialize_run {
     my $self = shift;
@@ -96,9 +95,20 @@ sub next {
         $self->initialize_run;
     }
 
-    warn "Context::next ", $self->path_as_string if $DEBUG;
+    my $run_path = join ' ', $self->path;
+    warn "Context::next ", $self->path_as_string, " ($run_path)\n"  if $DEBUG;
 
-    $self->dispatcher->run( join( ' ', $self->path ) , $self ); # This will (indirectly) call ->run_step( ... ) below
+    
+    {
+        # $self->dispatcher->run( $run_path, $self ); # This will (indirectly) call ->run_step( ... ) below
+        my $dispatch = $self->dispatcher->dispatch( $run_path );
+        if ( my @matches = $dispatch->matches ) {
+            for my $match ($dispatch->matches) {
+                my $result = $match->result;
+                last if $match->run( $self ); # ->run_step returned true
+            }
+        }
+    }
     my $next_path_part;
     $self->push_path( $next_path_part ) if $next_path_part = $self->next_path_part;
     return $next_path_part;
@@ -107,30 +117,33 @@ sub next {
 sub next_path_part {
     my $self = shift;
 
-    my $argument;
-    unless (defined ($argument = $self->first_remaining_argument)) {
-        return if $self->pass_terminal;
-        $self->pass_terminal( 1 );
-        return '$';
-    }
-    croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", $self->remaining_arguments, "]" if is_option_like $argument;
-    return $self->shift_remaining_argument;
+    return unless defined (my $argument = $self->first_remaining_argument);
+    croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", join ' ', $self->remaining_arguments, "]" if is_option_like $argument;
+    return $self->shift_remaining_argument; # Same as $argument, really
+}
+
+sub at_end {
+    my $self = shift;
+    return ! defined $self->first_remaining_argument;
 }
 
 sub path_as_string {
     my $self = shift;
-    return  join '/', '^START', $self->path;
+    return join '/', '^START', $self->path, ($self->at_end ? '$' : ());
 }
 
 sub run_step { # Called from within the Path::Dispatcher rule
     my $self = shift;
     my $argument_schema = shift;
     my $run = shift;
+    my $control = shift;
 
     $argument_schema = [] unless defined $argument_schema;
     
     my $step = $self->add_step( argument_schema => $argument_schema, run => $run ); 
-    $step->run;
+    return 1 if $step->run( $control ); # We consumed and ran, so we need to rollback
+    $self->pop_step; # Rollback, since we didn't actually run
+    return 0;
 }
 
 sub add_step {
@@ -198,6 +211,7 @@ has parent => qw/is ro isa Maybe[Getopt::Chain::Context::Step]/;
 
 sub run {
     my $self = shift;
+    my $control = shift;
 
     my $options = {};
     my $arguments = [ $self->arguments ];
@@ -212,6 +226,11 @@ sub run {
         chomp( my $error = $@ );
         croak "At ", join( '/', $self->path ), " with arguments [@$arguments]: $@";
     }
+
+    my $at_end = ! @$arguments;
+
+    return unless $at_end || $control->{always_run};
+
     $self->context->_remaining_arguments( $arguments );
 
     while (my ($key, $value) = each %$options) {
@@ -221,6 +240,8 @@ sub run {
 
     my $run = $self->_run;
     $run->( $self->context, @$arguments ) if $run;
+
+    return 1;
 }
 
 1;
