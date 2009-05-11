@@ -3,11 +3,9 @@ use warnings;
 
 use Test::Most;
 
-plan skip_all => 'Refactoring';
+use Getopt::Chain;
 
 plan qw/no_plan/;
-
-use Getopt::Chain;
 
 my (@arguments, $options, @path);
 

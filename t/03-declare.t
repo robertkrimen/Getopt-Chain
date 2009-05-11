@@ -15,22 +15,44 @@ start [qw/ a1 b2:s /];
 
 rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
 
+rewrite [ ['about', 'copying'] ] => sub { "help $1" };
+
 on apple => [qw/ c3 /], sub {
     my $context = shift;
 
     $context->option( apple => 1 );
 };
 
-on 'help' => undef, sub {
+on help => undef, sub {
     my $context = shift;
 
     $context->option( help => 1 );
 };
 
-on 'help xyzzy' => undef, sub {
-    my $context = shift;
+#on 'help xyzzy' => undef, sub {
+#    my $context = shift;
 
-    $context->option( help_xyzzy => 1 );
+#    $context->option( help_xyzzy => 1 );
+#};
+
+under help => sub {
+    on 'xyzzy' => undef, sub {
+        my $context = shift;
+
+        $context->option( help_xyzzy => 1 );
+    };
+
+    on 'about' => undef, sub {
+        my $context = shift;
+
+        $context->option( help_about => 1 );
+    };
+
+    on 'copying' => undef, sub {
+        my $context = shift;
+
+        $context->option( help_copying => 1 );
+    };
 };
 
 no Getopt::Chain::Declare;
@@ -62,3 +84,13 @@ $options = $app->run( [qw/ help xyzzy /] );
 
 ok( ! $options->{help} );
 ok( $options->{help_xyzzy} );
+
+$options = $app->run( [qw/ about /] );
+
+ok( ! $options->{help} );
+ok( $options->{help_about} );
+
+$options = $app->run( [qw/ copying /] );
+
+ok( ! $options->{help} );
+ok( $options->{help_copying} );

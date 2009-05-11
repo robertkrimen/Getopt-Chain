@@ -1,14 +1,11 @@
-package Getopt::Chain;
+package Getopt::Chain::v005;
 
 use warnings;
 use strict;
 
-use constant DEBUG => $ENV{GOC_TRACE} ? 1 : 0;
-our $DEBUG = DEBUG;
-
 =head1 NAME
 
-Getopt::Chain - Option and subcommand processing in the style svn(1) and git(1)
+Getopt::Chain::v005 - Option and subcommand processing in the style svn and git
 
 =head1 VERSION
 
@@ -23,11 +20,11 @@ our $VERSION = '0.005';
     #!/usr/bin/perl -w
 
     use strict;
-    use Getopt::Chain;
+    use Getopt::Chain::v005;
 
     # A partial, pseudo-reimplementation of git(1):
     
-    Getopt::Chain->process(
+    Getopt::Chain::v005->process(
 
         options => [qw/ version bare git-dir=s /]
 
@@ -78,15 +75,15 @@ our $VERSION = '0.005';
 
 =head1 DESCRIPTION
 
-Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
+Getopt::Chain::v005 can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
 covered by L<Getopt::Long> is fair game.
 
-CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
+CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain::v005 uses 
 pass_through). However, if a subcommand has an option with the same name or alias as an option for a parent, then that option won't be available
 for the subcommand. For example:
 
     ./script --verbose --revision 36 edit --revision 48 --file xyzzy.c
-    # Getopt::Chain will not associate the second --revision with "edit"
+    # Getopt::Chain::v005 will not associate the second --revision with "edit"
 
 So, for now, try to use distinct option names/aliases :)
 
@@ -96,13 +93,13 @@ TODO: Default values, option descriptions (like L<Getopt::Long::Descriptive>) an
 
 =head1 Basic configuration
 
-A Getopt::Chain configuration is pretty straightforward
+A Getopt::Chain::v005 configuration is pretty straightforward
 
 Essentially you declare a command, which consists of (optional) <options> and an (optional) <run> subroutine (a CODE reference)
 
 <options> should be an ARRAY reference consisting of a L<Getopt::Long> specification
 
-<run> should be a CODE reference which is a subroutine that accepts a L<Getopt::Chain::Context> as the first argument and any remaining command-line
+<run> should be a CODE reference which is a subroutine that accepts a L<Getopt::Chain::v005::Context> as the first argument and any remaining command-line
 arguments (left after option parsing) as the rest of @_
 
 A third parameter exists, <commands> in which you associate a <name> with a command, consisting (recursively) of <options>, <run>, and <commands>
@@ -158,98 +155,28 @@ You can either give a single subroutine to deal with all three, or give a HASH w
 
 For more detail (for now), look at the source:
 
-    perldoc -m Getopt::Chain
+    perldoc -m Getopt::Chain::v005
 
 =head1 METHODS
 
-=head2 Getopt::Chain->process( <arguments>, ... )
+=head2 Getopt::Chain::v005->process( <arguments>, ... )
 
 <arguments> should be an ARRAY reference
 
-... should consist of a Getopt::Chain configuration
+... should consist of a Getopt::Chain::v005 configuration
 
-=head2 Getopt::Chain->process( ... )
+=head2 Getopt::Chain::v005->process( ... )
 
 @ARGV will be used for <arguments>
 
-... should consist of a Getopt::Chain configuration
+... should consist of a Getopt::Chain::v005 configuration
 
 =cut
 
 use Moose;
-use Getopt::Chain::Carp;
+use Getopt::Chain::v005::Carp;
 
-use Getopt::Chain::Builder;
-use Getopt::Chain::Context;
-
-has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher /];
-sub _build_builder {
-    return Getopt::Chain::Builder->new;
-}
-
-sub process {
-    if (! ref $_[0] && $_[0] && $_[0] eq 'Getopt::Chain') {
-        shift;
-        require Getopt::Chain::v005;
-        carp "Deprecated: Use Getopt::Chain::v005->process( ... ) to avoid this warning";
-        return Getopt::Chain::v005->process( @_ );
-    }
-#    my $self = shift;
-#    unless (ref $self) {
-#        my @process;
-#        push @process, shift if ref $_[0] eq "ARRAY";
-#        my $self = $self->new;
-#        $self->parse( @_ );
-#        return $self->process(@process);
-#    }
-#    my $self = shift;
-#    return $self->run( @_ );
-}
-
-sub parse {
-    my $self = shift;
-    my %schema = @_;
-
-    $self->_parse_command( [] => \%schema );
-}
-
-sub _parse_command {
-    my $self = shift;
-    my $path = shift;
-    my $schema = shift;
-
-    if ( ref $schema eq 'CODE' ) {
-        $schema = { run => $schema };
-    }
-
-    my $path_as_string = join ' ', @$path;
-    warn "Chain::_parse_command <$path_as_string>" if $DEBUG;
-    $self->builder->on( $path_as_string => ($schema->{options}, $schema->{run}), always_run => 1 );
-
-    if ( my $commands = $schema->{commands} ) {
-
-        while( my ($command, $schema) = each %$commands ) {
-            $self->_parse_command( [ @$path, $command ] => $schema );
-        }
-    }
-}
-
-sub run {
-    my $self = shift;
-    my $arguments = shift;
-
-    $arguments = [ @ARGV ] unless $arguments;
-
-    my $context = Getopt::Chain::Context->new( dispatcher => $self->dispatcher, arguments => $arguments );
-    $context->run;
-    return $context->options;
-}
-
-1;
-
-__END__
-
-use Getopt::Chain::Context;
+use Getopt::Chain::v005::Context;
 
 use Getopt::Long qw/GetOptionsFromArray/;
 
@@ -333,7 +260,7 @@ sub process {
     $arguments = [ @ARGV ] unless $arguments;
     my $remaining_arguments = [ @$arguments ]; # This array will eventually contain leftover arguments
 
-    my $context = $given{context} ||= Getopt::Chain::Context->new;
+    my $context = $given{context} ||= Getopt::Chain::v005::Context->new;
     $context->push(processor => $self, command => $given{command},
                     arguments => $arguments, remaining_arguments => $remaining_arguments, options => \%options);
 
@@ -423,7 +350,7 @@ MooseX::MakeImmutable->lock_down;
 
 =head1 SEE ALSO
 
-L<Getopt::Chain::Context>
+L<Getopt::Chain::v005::Context>
 
 L<Getopt::Long>
 
@@ -456,7 +383,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Getopt::Chain
+    perldoc Getopt::Chain::v005
 
 
 You can also look for information at:
@@ -495,4 +422,4 @@ under the same terms as Perl itself.
 
 =cut
 
-1; # End of Getopt::Chain
+1; # End of Getopt::Chain::v005

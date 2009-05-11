@@ -1,4 +1,4 @@
-package Getopt::Chain::Carp;
+package Getopt::Chain::v005::Carp;
 
 use strict;
 use warnings;

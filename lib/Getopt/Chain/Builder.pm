@@ -45,7 +45,7 @@ sub on {
         }
         else {
             $matcher = join '\s+', split m/\s+/, $path;
-            $matcher = qr/^\s*$matcher\s*$/; # Fuzzy matching?
+            $matcher = qr/\s*$matcher\s*$/; # Fuzzy matching?
         }
     
     }
@@ -56,6 +56,11 @@ sub on {
         my $context = shift;
         return $context->run_step( $argument_schema, $run, { %control } );
     } );
+}
+
+sub under {
+    my $self = shift;
+    $self->builder->under( @_ );
 }
 
 1;
