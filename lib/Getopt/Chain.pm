@@ -171,13 +171,13 @@ Robert Krimen, C<< <rkrimen at cpan.org> >>
 
 You can contribute or fork this project via GitHub:
 
-L<http://github.com/robertkrimen/getopt-chain/tree/master>
+L<http://github.com/robertkrimen/Getopt-Chain/tree/master>
 
-    git clone git://github.com/robertkrimen/getopt-chain.git Getopt-Chain
+    git clone git://github.com/robertkrimen/Getopt-Chain.git Getopt-Chain
 
 =head1 BUGS
 
-Please report any bugs or feature requests to C<bug-getopt-chain at rt.cpan.org>, or through
+Please report any bugs or feature requests to C<bug-Getopt-Chain at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Getopt-Chain>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
 

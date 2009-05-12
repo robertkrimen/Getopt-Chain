@@ -3,7 +3,7 @@ use inc::Module::Install;
 name 'Getopt-Chain';
 all_from 'lib/Getopt/Chain.pm';
 
-resources repository => 'http://github.com/robertkrimen/getopt-chain/tree/master';
+resources repository => 'http://github.com/robertkrimen/Getopt-Chain/tree/master';
 
 {
     require ExtUtils::MakeMaker;
