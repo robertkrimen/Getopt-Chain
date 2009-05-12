@@ -8,7 +8,7 @@ our $DEBUG = DEBUG;
 
 =head1 NAME
 
-Getopt::Chain - Commandline processing like svn and git
+Getopt::Chain - Command-line processing like svn and git
 
 =head1 VERSION
 

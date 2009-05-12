@@ -11,6 +11,7 @@ install distclean tardist: Makefile
 	$(MAKE) -f $< $@
 
 test: Makefile
+	perl Makefile.PL
 	TEST_RELEASE=1 $(MAKE) -f $< $@
 
 Makefile: Makefile.PL

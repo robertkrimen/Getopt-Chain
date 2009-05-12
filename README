@@ -1,6 +1,5 @@
 NAME
-    Getopt::Chain - Option and subcommand processing in the style of svn and
-    git
+    Getopt::Chain - Command-line processing like svn and git
 
 VERSION
     Version 0.010
@@ -82,8 +81,8 @@ SYNPOSIS
 
 DESCRIPTION
     Getopt::Chain can be used to provide svn(1)- and git(1)-style option and
-    subcommand processing. Any option specification covered by Getopt::Long
-    is fair game.
+    command processing. Any option specification covered by Getopt::Long is
+    fair game.
 
     This is a new version of Getopt::Chain that uses Path::Dispatcher
 
