@@ -8,7 +8,7 @@ our $DEBUG = DEBUG;
 
 =head1 NAME
 
-Getopt::Chain - Option and subcommand processing in the style of svn and git
+Getopt::Chain - Commandline processing like svn and git
 
 =head1 VERSION
 
@@ -51,7 +51,6 @@ our $VERSION = '0.010';
         # Do help stuff ...
         # First argument is undef because help
         # doesn't take any options
-        
     };
 
     under help => sub {
@@ -84,9 +83,9 @@ our $VERSION = '0.010';
            my $context = shift;
            my $topic = $1;
 
-            # Catch-all for anything not fitting into the above...
-            
-            warn "I don't know about \"$topic\"\n"
+           # Catch-all for anything not fitting into the above...
+
+           warn "I don't know about \"$topic\"\n"
         };
     };
 
@@ -97,7 +96,7 @@ our $VERSION = '0.010';
 
 =head1 DESCRIPTION
 
-Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
+Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and command processing. Any option specification
 covered by L<Getopt::Long> is fair game.
 
 This is a new version of Getopt::Chain that uses L<Path::Dispatcher>

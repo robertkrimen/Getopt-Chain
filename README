@@ -37,8 +37,7 @@ SYNPOSIS
             # Do help stuff ...
             # First argument is undef because help
             # doesn't take any options
-            
-    };
+        };
 
         under help => sub {
 
@@ -70,9 +69,9 @@ SYNPOSIS
                my $context = shift;
                my $topic = $1;
 
-                # Catch-all for anything not fitting into the above...
-                
-            warn "I don't know about \"$topic\"\n"
+               # Catch-all for anything not fitting into the above...
+
+               warn "I don't know about \"$topic\"\n"
             };
         };
 
