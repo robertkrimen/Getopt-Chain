@@ -19,6 +19,12 @@ our $DEBUG = DEBUG;
 
 Getopt::Chain::Context - Per-command context
 
+=head1 WARNING
+
+This documentation is out of date and needs an update. For the real documentation:
+
+    perldoc -m Getopt::Chain::Context 
+
 =head1 DESCRIPTION
 
 A context encapsulates the current state of execution, including:

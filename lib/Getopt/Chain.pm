@@ -12,20 +12,99 @@ Getopt::Chain - Option and subcommand processing in the style of svn and git
 
 =head1 VERSION
 
-Version 0.005
+Version 0.010
 
 =cut
 
-our $VERSION = '0.005';
+our $VERSION = '0.010';
 
 =head1 SYNPOSIS 
+
+    package My::Command;
+
+    use Getopt::Chain::Declare;
+
+    start [qw/ verbose|v /]; # These are "global"
+                             # my-command --verbose initialize ...
+
+    # my-command ? initialize ... --> my-command help initialize ...
+    rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
+
+    # NOTE: Rewriting applies to the command sequence, NOT options
+
+    # my-command about ... --> my-command help about
+    rewrite [ ['about', 'copying'] ] => sub { "help $1" };
+
+    # my-command initialize --dir=...
+    on initialize => [qw/ dir|d=s /], sub {
+        my $context = shift;
+
+        my $dir = $context->option( 'dir' )
+
+        # Do initialize stuff with $dir
+    };
+
+    # my-command help
+    on help => undef, sub {
+        my $context = shift;
+
+        # Do help stuff ...
+        # First argument is undef because help
+        # doesn't take any options
+        
+    };
+
+    under help => sub {
+
+        # my-command help create
+        # my-command help initialize
+        on [ [ qw/create initialize/ ] ] => undef, sub {
+            my $context = shift;
+
+            # Do help for create/initialize
+            # Both: "help create" and "help initialize" go here
+        };
+
+        # my-command help about
+        on 'about' => undef, sub {
+            my $context = shift;
+
+            # Help for about...
+        };
+
+        # my-command help copying
+        on 'copying' => undef, sub {
+            my $context = shift;
+
+            # Help for copying...
+        };
+
+        # my-command help ...
+        on qr/^(\S+)$/ => undef, sub {
+           my $context = shift;
+           my $topic = $1;
+
+            # Catch-all for anything not fitting into the above...
+            
+            warn "I don't know about \"$topic\"\n"
+        };
+    };
+
+    # ... elsewhere ...
+
+    My::Command->run( [ @arguments ] )
+    My::Command->run # Just run with @ARGV
 
 =head1 DESCRIPTION
 
 Getopt::Chain can be used to provide C<svn(1)>- and C<git(1)>-style option and subcommand processing. Any option specification
 covered by L<Getopt::Long> is fair game.
 
-CAVEAT: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
+This is a new version of Getopt::Chain that uses L<Path::Dispatcher>
+
+CAVEAT 1: This is pretty beta, so the sugar/interface above WILL be tweaked
+
+CAVEAT 2: Unfortunately, Getopt::Long slurps up the entire arguments array at once. Usually, this isn't a problem (as Getopt::Chain uses 
 pass_through). However, if a subcommand has an option with the same name or alias as an option for a parent, then that option won't be available
 for the subcommand. For example:
 
@@ -33,6 +112,12 @@ for the subcommand. For example:
     # Getopt::Chain will not associate the second --revision with "edit"
 
 So, for now, try to use distinct option names/aliases :)
+
+DEBUG: You can get some extra information about what Getopt::Chain is doing by setting the environment variable C<GOC_TRACE> to 1
+
+=head1 LEGACY
+
+The old-style, non L<Path::Dispatcher> version is still available at L<Getopt::Chain::v005>
 
 =cut
 
@@ -67,185 +152,10 @@ sub run {
     return $context->options;
 }
 
-1;
-
-__END__
-
-use Getopt::Chain::Context;
-
-use Getopt::Long qw/GetOptionsFromArray/;
-
-has options => qw/is ro/;
-
-has schema => qw/is ro isa Maybe[HashRef]/;
-has _getopt_long_options => qw/is rw isa ArrayRef/;
-
-has commands => qw/is rw isa Maybe[HashRef]/;
-
-has run => qw/is ro isa Maybe[CodeRef]/;
-
-has validate => qw/is ro isa Maybe[CodeRef]/;
-
-has error => qw/is ro/;
-
-sub BUILD {
-    my $self = shift;
-    my $given = shift;
-
-    my $commands = $self->_parse_commands($self->commands);
-    my ($schema, $getopt_long_options) = $self->_parse_schema($self->options);
-
-    $self->{commands} = $commands;
-    $self->{schema} = $schema;
-    $self->_getopt_long_options($getopt_long_options);
-}
-
-sub _parse_commands {
-    my $self = shift;
-    my $commands = shift;
-
-    return unless $commands;
-
-    my $class = ref $self;
-
-    my %commands;
-    while (my ($name, $command) = each %$commands) {
-        $commands{$name} = $class->new(inherit => $self, ref $command eq "CODE" ? (run => $command) : %$command);
-    }
-
-    return \%commands;
-}
-
-sub _parse_schema {
-    my $self = shift;
-    my $schema = shift;
-
-    my %schema;
-    my @getopt_long_options;
-    $schema = { map { $_ => undef } @$schema } if ref $schema eq "ARRAY";
-
-    while (my ($specification, $more) = each %$schema) {
-
-        my (%option, %ParseOptionSpec);
-
-        my ($key, $name) = Getopt::Long::ParseOptionSpec($specification, \%ParseOptionSpec);
-
-        $option{key} = $key;
-        $option{name} = $name;
-        $option{aliases} = [ keys %ParseOptionSpec ];
-
-        $schema{$key} = \%option;
-        push @getopt_long_options, $specification;
-    }
-
-    return (\%schema, \@getopt_long_options);
-}
-
-sub process {
-    my $self = shift;
-    unless (ref $self) {
-        my @process;
-        push @process, shift if ref $_[0] eq "ARRAY";
-        return $self->new(@_)->process(@process);
-    }
-    my $arguments = shift;
-    my %given = 1 == @_ && ref $_[0] eq "HASH" ? %{ $_[0] } : @_;
-
-    my %options;
-    $arguments = [ @ARGV ] unless $arguments;
-    my $remaining_arguments = [ @$arguments ]; # This array will eventually contain leftover arguments
-
-    my $context = $given{context} ||= Getopt::Chain::Context->new;
-    $context->push(processor => $self, command => $given{command},
-                    arguments => $arguments, remaining_arguments => $remaining_arguments, options => \%options);
-
-    eval {
-        if (my $getopt_long_options = $self->_getopt_long_options) {
-            Getopt::Long::Configure(qw/pass_through/);
-            GetOptionsFromArray($remaining_arguments, \%options, @$getopt_long_options);
-        }
-    };
-    $self->_handle_option_processing_error($@, $context) if $@;
-
-    $context->update;
-
-    if (@$remaining_arguments && $remaining_arguments->[0] =~ m/^--\w/) {
-        $self->_handle_have_remainder('Have remainder "' . $remaining_arguments->[0] . '"', $context);
-    }
-
-    $context->valid($self->validate->($context)) if $self->validate;
-
-    $self->run->($context, @$remaining_arguments) if $self->run;
-
-    if (my $commands = $self->commands) {
-        my @arguments = @$remaining_arguments;
-        my $command = shift @arguments;
-
-        my $processor = $commands->{defined $command ? $command : 'DEFAULT'} || $commands->{DEFAULT};
-
-        if ($processor) {
-            return $processor->process(\@arguments, command => $command, context => $context);
-        }
-        elsif (defined $command) {
-            $self->_handle_unknown_command("Unknown command \"$command\"", $context);
-        }
-    }
-
-    return $context->options;
-}
-
-sub _handle_option_processing_error {
-    my $self = shift;
-    return $self->_handle_error(option_processing_error => @_);
-}
-
-sub _handle_have_remainder {
-    my $self = shift;
-    return $self->_handle_error(have_remainder => @_);
-}
-
-sub _handle_unknown_command {
-    my $self = shift;
-    return $self->_handle_error(unknown_command => @_);
-}
-
-sub _handle_error {
-    my $self = shift;
-    my $event = shift;
-    my $description = shift;
-
-    my $error = $self->error;
-
-    if (ref $error eq "CODE") {
-        return $error->($event, $description, @_);
-    }
-    elsif (ref $error eq "HASH") {
-        goto _handle_error_croak unless defined (my $response = $error->{$event});
-
-        if (ref $response eq "CODE") {
-            return $response->($event, $description, @_);
-        }
-        elsif ($response) {
-            goto _handle_error_croak;
-        }
-        else {
-            # Ignore the error
-            return;
-        }
-    }
-
-    croak "Don't understand error handler ($error)" if $error;
-
-_handle_error_croak:
-    croak "$description ($event)";
-}
-
 use MooseX::MakeImmutable;
 MooseX::MakeImmutable->lock_down;
 
 =head1 SEE ALSO
-
-L<Getopt::Chain::Context>
 
 L<Getopt::Long>
 
