@@ -1,6 +1,10 @@
 TODO:
     - Test with '--'
 
+0.010 Tuesday May 12 14:32:10 PDT 2009:
+    - Big change: legacy-ized v005, using Path::Dispatcher to do the fun stuff
+    - Can use ::Declare to do nice stuff
+
 0.005 Thursday September 04 10:58:08 PDT 2008:
     - Properly pass through remaining arguments
 

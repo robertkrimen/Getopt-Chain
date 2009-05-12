@@ -92,8 +92,8 @@ our $VERSION = '0.010';
 
     # ... elsewhere ...
 
-    My::Command->run( [ @arguments ] )
-    My::Command->run # Just run with @ARGV
+    My::Command->new->run( [ @arguments ] )
+    My::Command->new->run # Just run with @ARGV
 
 =head1 DESCRIPTION
 
@@ -136,12 +136,15 @@ sub process {
     if (! ref $_[0] && $_[0] && $_[0] eq 'Getopt::Chain') {
         shift;
         require Getopt::Chain::v005;
-        carp "Deprecated: Use Getopt::Chain::v005->process( ... ) to avoid this warning";
+        carp "Deprecated: Use Getopt::Chain::v005->process( ... ) to avoid this warning (this method will be removed in a future version)";
         return Getopt::Chain::v005->process( @_ );
     }
 }
 
 sub run {
+    if (! ref $_[0] ) {
+        croak "Can't call run on the package; use ->new first";
+    }
     my $self = shift;
     my $arguments = shift;
 

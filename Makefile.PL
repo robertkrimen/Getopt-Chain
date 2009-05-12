@@ -27,13 +27,11 @@ _END_
     map { my ($pk, $vr) = split m/\s/; requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
 Getopt::Long 2.37
 Carp::Clan::Share
-Hash::Param
 Moose
+MooseX::AttributeHelpers
 MooseX::MakeImmutable 0.02
+Path::Dispatcher
 _END_
 }
 
-auto_install;
-
 WriteAll;
-

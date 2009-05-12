@@ -7,118 +7,120 @@ use Test::Most;
 
 plan qw/no_plan/;
 
-package t::App;
+our @did;
 
-use Getopt::Chain::Declare;
+package My::Command;
 
-start [qw/ a1 b2:s /];
+    use Getopt::Chain::Declare;
 
-rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
+    start [qw/ verbose|v /]; # These are "global"
+                             # my-command --verbose initialize ...
 
-rewrite [ ['about', 'copying'] ] => sub { "help $1" };
+    # my-command ? initialize ... --> my-command help initialize ...
+    rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
 
-on apple => [qw/ c3 /], sub {
-    my $context = shift;
+    # NOTE: Rewriting applies to the command sequence, NOT options
 
-    $context->option( apple => 1 );
-};
+    # my-command about ... --> my-command help about
+    rewrite [ ['about', 'copying'] ] => sub { "help $1" };
 
-on help => undef, sub {
-    my $context = shift;
-
-    $context->option( help => 1 );
-};
-
-#on 'help xyzzy' => undef, sub {
-#    my $context = shift;
-
-#    $context->option( help_xyzzy => 1 );
-#};
-
-under help => sub {
-    on [ [ qw/a b c/ ] ] => undef, sub {
+    # my-command initialize --dir=...
+    on initialize => [qw/ dir|d=s /], sub {
         my $context = shift;
 
-        $context->option( help_a_b_c => 1 );
+        my $dir = $context->option( 'dir' );
+
+        push @did, [ $context->command, dir => $dir ];
+        # Do initialize stuff with $dir
     };
 
-    on 'xyzzy' => undef, sub {
+    # my-command help
+    on help => undef, sub {
         my $context = shift;
 
-        $context->option( help_xyzzy => 1 );
+        # Do help stuff ...
+        # First argument is undef because help
+        # doesn't take any options
+        
+        push @did, [ $context->command, ];
     };
 
-    on 'about' => undef, sub {
-        my $context = shift;
+    under help => sub {
 
-        $context->option( help_about => 1 );
+        # my-command help create
+        # my-command help initialize
+        on [ [ qw/create initialize/ ] ] => undef, sub {
+            my $context = shift;
+
+            # Do help for create/initialize
+            # Both: "help create" and "help initialize" go here
+
+            push @did, [ $context->command, ];
+        };
+
+        # my-command help about
+        on 'about' => undef, sub {
+            my $context = shift;
+
+            # Help for about...
+
+            push @did, [ $context->command, ];
+        };
+
+        # my-command help copying
+        on 'copying' => undef, sub {
+            my $context = shift;
+
+            # Help for copying...
+
+            push @did, [ $context->command, ];
+        };
+
+        # my-command help ...
+        on qr/^(\S+)$/ => undef, sub {
+           my $context = shift;
+           my $topic = $1;
+
+            # Catch-all for anything not fitting into the above...
+            
+            push @did, [ $context->command, "I don't know about \"$topic\"\n" ]
+        };
     };
-
-    on 'copying' => undef, sub {
-        my $context = shift;
-
-        $context->option( help_copying => 1 );
-    };
-
-    on qr/^(\S+)$/ => undef, sub {
-       my $context = shift;
-       my $topic = $1;
-
-        $context->option( no_help => $1 );
-    };
-};
 
 no Getopt::Chain::Declare;
 
 package main;
 
-my @arguments = qw/--a1 apple --c3/;
-my ($options);
+my $options;
 
-my $app = t::App->new;
+sub run {
+    undef @did;
+    $options = My::Command->new->run( [ @_ ] );
+}
 
-ok( $app );
+run qw/--verbose/;
+ok( $options->{verbose} );
+ok( ! @did );
 
-$options = $app->run( [ @arguments ] );
+run qw/--verbose about/;
+ok( $options->{verbose} );
+cmp_deeply( \@did, [ [ "about" ] ] );
 
-ok( $options->{a1} );
-ok( $options->{c3} );
-ok( $options->{apple} );
+run qw/help copying/;
+ok( ! $options->{verbose} );
+cmp_deeply( \@did, [ [ "copying" ] ] );
 
-$options = $app->run( [qw/ help /] );
+run qw/initialize/;
+ok( ! $options->{verbose} );
+cmp_deeply( \@did, [ [ "initialize", dir => undef ] ] );
 
-ok( $options->{help} );
+run qw/initialize --dir ./;
+ok( ! $options->{verbose} );
+cmp_deeply( \@did, [ [ "initialize", dir => '.' ] ] );
 
-$options = $app->run( [qw/ ? /] );
+run qw/-v ? create/;
+ok( $options->{verbose} );
+cmp_deeply( \@did, [ [ "create" ] ] );
 
-ok( $options->{help} );
-
-$options = $app->run( [qw/ help xyzzy /] );
-
-ok( ! $options->{help} );
-ok( $options->{help_xyzzy} );
-
-$options = $app->run( [qw/ about /] );
-
-ok( ! $options->{help} );
-ok( $options->{help_about} );
-
-$options = $app->run( [qw/ copying /] );
-
-ok( ! $options->{help} );
-ok( $options->{help_copying} );
-
-$options = $app->run( [qw/ help a /] );
-
-ok( ! $options->{help} );
-ok( $options->{help_a_b_c} );
-
-$options = $app->run( [qw/ help c /] );
-
-ok( ! $options->{help} );
-ok( $options->{help_a_b_c} );
-
-$options = $app->run( [qw/ help d /] );
-
-is( $options->{no_help}, 'd' );
-
+run qw/? xyzzy/;
+cmp_deeply( \@did, [ [ "xyzzy", "I don't know about \"xyzzy\"\n" ] ] );

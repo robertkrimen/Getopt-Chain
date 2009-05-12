@@ -14,7 +14,7 @@ Getopt::Chain::Declare - Option and subcommand processing in the style of svn an
     use Getopt::Chain::Declare;
 
     start [qw/ verbose|v /]; # These are "global"
-                             # my-command --verbose initialize ...
+                             # my-command --verbose ...
 
     # my-command ? initialize ... --> my-command help initialize ...
     rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
@@ -81,8 +81,8 @@ Getopt::Chain::Declare - Option and subcommand processing in the style of svn an
 
     # ... elsewhere ...
 
-    My::Command->run( [ @arguments ] )
-    My::Command->run # Just run with @ARGV
+    My::Command->new->run( [ @arguments ] )
+    My::Command->new->run # Just run with @ARGV
 
 =head1 DESCRIPTION
 
