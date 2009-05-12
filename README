@@ -1,40 +1,165 @@
-Getopt-Chain
+NAME
+    Getopt::Chain - Option and subcommand processing in the style of svn and
+    git
 
-INSTALLATION
+VERSION
+    Version 0.010
 
-To install this module, run the following commands:
+SYNPOSIS
+        package My::Command;
 
-	perl Makefile.PL
-	make
-	make test
-	make install
+        use Getopt::Chain::Declare;
 
-SUPPORT AND DOCUMENTATION
+        start [qw/ verbose|v /]; # These are "global"
+                                 # my-command --verbose initialize ...
 
-After installing, you can find documentation for this module with the
-perldoc command.
+        # my-command ? initialize ... --> my-command help initialize ...
+        rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
 
-    perldoc Getopt::Chain
+        # NOTE: Rewriting applies to the command sequence, NOT options
 
-You can also look for information at:
+        # my-command about ... --> my-command help about
+        rewrite [ ['about', 'copying'] ] => sub { "help $1" };
 
-    RT, CPAN's request tracker
-        http://rt.cpan.org/NoAuth/Bugs.html?Dist=Getopt-Chain
+        # my-command initialize --dir=...
+        on initialize => [qw/ dir|d=s /], sub {
+            my $context = shift;
 
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/Getopt-Chain
+            my $dir = $context->option( 'dir' )
 
-    CPAN Ratings
-        http://cpanratings.perl.org/d/Getopt-Chain
+            # Do initialize stuff with $dir
+        };
 
-    Search CPAN
-        http://search.cpan.org/dist/Getopt-Chain
+        # my-command help
+        on help => undef, sub {
+            my $context = shift;
 
+            # Do help stuff ...
+            # First argument is undef because help
+            # doesn't take any options
+            
+    };
 
-COPYRIGHT AND LICENCE
+        under help => sub {
 
-Copyright (C) 2008 Robert Krimen
+            # my-command help create
+            # my-command help initialize
+            on [ [ qw/create initialize/ ] ] => undef, sub {
+                my $context = shift;
 
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+                # Do help for create/initialize
+                # Both: "help create" and "help initialize" go here
+            };
+
+            # my-command help about
+            on 'about' => undef, sub {
+                my $context = shift;
+
+                # Help for about...
+            };
+
+            # my-command help copying
+            on 'copying' => undef, sub {
+                my $context = shift;
+
+                # Help for copying...
+            };
+
+            # my-command help ...
+            on qr/^(\S+)$/ => undef, sub {
+               my $context = shift;
+               my $topic = $1;
+
+                # Catch-all for anything not fitting into the above...
+                
+            warn "I don't know about \"$topic\"\n"
+            };
+        };
+
+        # ... elsewhere ...
+
+        My::Command->new->run( [ @arguments ] )
+        My::Command->new->run # Just run with @ARGV
+
+DESCRIPTION
+    Getopt::Chain can be used to provide svn(1)- and git(1)-style option and
+    subcommand processing. Any option specification covered by Getopt::Long
+    is fair game.
+
+    This is a new version of Getopt::Chain that uses Path::Dispatcher
+
+    CAVEAT 1: This is pretty beta, so the sugar/interface above WILL be
+    tweaked
+
+    CAVEAT 2: Unfortunately, Getopt::Long slurps up the entire arguments
+    array at once. Usually, this isn't a problem (as Getopt::Chain uses
+    pass_through). However, if a subcommand has an option with the same name
+    or alias as an option for a parent, then that option won't be available
+    for the subcommand. For example:
+
+        ./script --verbose --revision 36 edit --revision 48 --file xyzzy.c
+        # Getopt::Chain will not associate the second --revision with "edit"
+
+    So, for now, try to use distinct option names/aliases :)
+
+    DEBUG: You can get some extra information about what Getopt::Chain is
+    doing by setting the environment variable "GOC_TRACE" to 1
+
+LEGACY
+    The old-style, non Path::Dispatcher version is still available at
+    Getopt::Chain::v005
+
+SEE ALSO
+    Getopt::Long
+
+    App::Cmd
+
+    MooseX::App::Cmd
+
+AUTHOR
+    Robert Krimen, "<rkrimen at cpan.org>"
+
+SOURCE
+    You can contribute or fork this project via GitHub:
+
+    <http://github.com/robertkrimen/Getopt-Chain/tree/master>
+
+        git clone git://github.com/robertkrimen/Getopt-Chain.git Getopt-Chain
+
+BUGS
+    Please report any bugs or feature requests to "bug-Getopt-Chain at
+    rt.cpan.org", or through the web interface at
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Getopt-Chain>. I will be
+    notified, and then you'll automatically be notified of progress on your
+    bug as I make changes.
+
+SUPPORT
+    You can find documentation for this module with the perldoc command.
+
+        perldoc Getopt::Chain
+
+    You can also look for information at:
+
+    *   RT: CPAN's request tracker
+
+        <http://rt.cpan.org/NoAuth/Bugs.html?Dist=Getopt-Chain>
+
+    *   AnnoCPAN: Annotated CPAN documentation
+
+        <http://annocpan.org/dist/Getopt-Chain>
+
+    *   CPAN Ratings
+
+        <http://cpanratings.perl.org/d/Getopt-Chain>
+
+    *   Search CPAN
+
+        <http://search.cpan.org/dist/Getopt-Chain>
+
+ACKNOWLEDGEMENTS
+COPYRIGHT & LICENSE
+    Copyright 2008 Robert Krimen, all rights reserved.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
 

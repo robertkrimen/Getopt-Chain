@@ -18,6 +18,11 @@ resources repository => 'http://github.com/robertkrimen/Getopt-Chain/tree/master
     };
 }
 
+if (-e 'inc/.author') {
+    my $all_from = join '/', 'lib', split m/-/, name . '.pm';
+    `perldoc -tF $all_from > README` if ! -e 'README' || (stat $all_from)[9] > (stat 'README')[9];
+}
+
 {
     map { my ($pk, $vr) = split m/\s/; build_requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
 Test::Most

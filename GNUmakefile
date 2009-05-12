@@ -19,5 +19,6 @@ Makefile: Makefile.PL
 clean: distclean
 
 reset: clean
+	rm -rf inc META.y*ml
 	perl Makefile.PL
 	$(MAKE) test
