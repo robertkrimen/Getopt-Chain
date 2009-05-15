@@ -1,5 +1,9 @@
 TODO:
-    - Test with '--'
+    - Test with '--' (huh?)
+    - Implement 'defer' sugar/backing
+
+0.011 Thursday May 14 20:22:44 PDT 2009:
+    - Hash::Param dependency in Makefile.PL
 
 0.010 Tuesday May 12 14:32:10 PDT 2009:
     - Big change: legacy-ized v005, using Path::Dispatcher to do the fun stuff

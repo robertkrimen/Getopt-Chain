@@ -30,8 +30,9 @@ Test::Trap
 _END_
 
     map { my ($pk, $vr) = split m/\s/; requires $pk => $vr || 0 } grep { ! /^\s*#/ } split m/\n/, <<_END_;
-Getopt::Long 2.37
 Carp::Clan::Share
+Getopt::Long 2.37
+Hash::Param
 Moose
 MooseX::AttributeHelpers
 MooseX::MakeImmutable 0.02

@@ -2,7 +2,7 @@ NAME
     Getopt::Chain - Command-line processing like svn and git
 
 VERSION
-    Version 0.010
+    Version 0.011
 
 SYNPOSIS
         package My::Command;
@@ -114,6 +114,12 @@ SEE ALSO
 
     MooseX::App::Cmd
 
+ACKNOWLEDGEMENTS
+    Sartak for Path::Dispatcher
+
+    obra for inspiration on the CLI (via Prophet & Sd:
+    <http://syncwith.us/>)
+
 AUTHOR
     Robert Krimen, "<rkrimen at cpan.org>"
 
@@ -154,7 +160,6 @@ SUPPORT
 
         <http://search.cpan.org/dist/Getopt-Chain>
 
-ACKNOWLEDGEMENTS
 COPYRIGHT & LICENSE
     Copyright 2008 Robert Krimen, all rights reserved.
 
