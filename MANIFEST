@@ -23,6 +23,7 @@ t/00-load.t
 t/01-basic.t
 t/03-declare.t
 t/04-capture.t
+t/05-declare-with-argument.t
 t/10-usage.t
 t/99-synopsis.t
 t/release/boilerplate.t
