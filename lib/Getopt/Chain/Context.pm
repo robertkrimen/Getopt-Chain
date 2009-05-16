@@ -346,18 +346,18 @@ sub run {
         croak "At ", join( '/', $self->path ), " with arguments [@$arguments]: $@";
     }
 
-    my $at_end = ! @$arguments;
-
-    unless ($at_end || $control->{always_run}) {
-        warn "Context::Step::run ", $self->context->path_as_string, " SKIP\n" if DEBUG;
-        return;
-    }
-
     $self->context->_remaining_arguments( $arguments );
 
     while (my ($key, $value) = each %$options) {
         $self->option( $key => $value );
         $self->context->option( $key => $value ); # TODO Better way to do this...
+    }
+
+    my $last = ! @$arguments;
+
+    unless ($last) {
+        warn "Context::Step::run ", $self->context->path_as_string, " SKIP\n" if DEBUG;
+        return;
     }
 
     my $run = $self->_run;
