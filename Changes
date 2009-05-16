@@ -2,6 +2,9 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.012 Friday May 15 19:45:34 PDT 2009:
+    - More saner path handling (* globbing at end)
+
 0.011 Thursday May 14 20:22:44 PDT 2009:
     - Hash::Param dependency in Makefile.PL
 
