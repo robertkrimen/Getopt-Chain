@@ -25,14 +25,10 @@ sub on {
     my %given = @_;
 
     my %control = (
-        always_process_arguments => 0,
-        always_run => $given{always_run} || 0,
     );
     
     my $matcher;
     if (ref $path eq 'ARRAY') {
-        # Also, check for '*', '$', etc. Ignore if literal => 1
-#        $matcher = [ split m/\s+/, $path ];
         $matcher = $path;
     }
     elsif (ref $path eq 'Regexp') {
@@ -44,9 +40,14 @@ sub on {
             $control{always_run} = 1 unless exists $given{always_run};
             $matcher = [];
         }
+        elsif ($path =~ s/\s+\*\s*$//) {
+            $matcher = qr/$path\b/;
+        }
+        elsif ($path =~ m/^\s*\*\s*$/) {
+            $matcher = qr/(.*)/;
+        }
         else {
-            $matcher = join '\s+', split m/\s+/, $path;
-            $matcher = qr/\s*$matcher\s*$/; # Fuzzy matching?
+            $matcher = [ split m/\s+/, $path ];
         }
     
     }
