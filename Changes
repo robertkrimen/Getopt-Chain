@@ -2,6 +2,9 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.013 Saturday May 16 00:40:06 PDT 2009:
+    - Took erroring XXX out of .t
+
 0.012 Friday May 15 19:45:34 PDT 2009:
     - More saner path handling (* globbing at end)
 

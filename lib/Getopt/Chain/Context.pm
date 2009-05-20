@@ -332,6 +332,11 @@ sub run {
     my $self = shift;
     my $control = shift;
 
+    my @arguments;
+    if ($control->{arguments_from_1} && defined $1) {
+        push @arguments, grep { length } split m/\s+/, $1;
+    }
+
     my $options = {};
     my $arguments = [ $self->arguments ];
     my $argument_schema = [ $self->argument_schema ];
@@ -355,13 +360,15 @@ sub run {
 
     my $last = ! @$arguments;
 
-    unless ($last) {
+    unless ($last || $control->{always_run}) {
         warn "Context::Step::run ", $self->context->path_as_string, " SKIP\n" if DEBUG;
         return;
     }
 
+    push @arguments, @$arguments; # TODO: Test this
+
     my $run = $self->_run;
-    $run->( $self->context, @$arguments ) if $run;
+    $run->( $self->context, @arguments ) if $run;
 
     return 1;
 }

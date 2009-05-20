@@ -25,7 +25,9 @@ sub on {
     my %given = @_;
 
     my %control = (
+        map { $_ => $given{$_} } grep { exists $given{$_} } qw/always_run/
     );
+    
     
     my $matcher;
     if (ref $path eq 'ARRAY') {
@@ -41,10 +43,12 @@ sub on {
             $matcher = [];
         }
         elsif ($path =~ s/\s+\*\s*$//) {
-            $matcher = qr/$path\b/;
+            $matcher = qr/$path\b(.*)/;
+            $control{arguments_from_1} = 1;
         }
         elsif ($path =~ m/^\s*\*\s*$/) {
             $matcher = qr/(.*)/;
+            $control{arguments_from_1} = 1;
         }
         else {
             $matcher = [ split m/\s+/, $path ];

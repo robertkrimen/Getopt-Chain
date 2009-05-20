@@ -125,7 +125,7 @@ sub run {
     $options = My::Command->new->run( [ @_ ] );
 }
 
-use XXX;
+#use XXX;
 
 run qw//;
 cmp_deeply( \@did, [ [ undef ] ] );
