@@ -131,6 +131,11 @@ sub _build_builder {
     return Getopt::Chain::Builder->new;
 }
 
+has context_from => qw/is ro isa Str|CodeRef lazy_build 1/;
+sub _build_context_from {
+    return 'Getopt::Chain::Context';
+}
+
 sub process {
     if (! ref $_[0] && $_[0] && $_[0] eq 'Getopt::Chain') {
         shift;
@@ -149,9 +154,21 @@ sub run {
 
     $arguments = [ @ARGV ] unless $arguments;
 
-    my $context = Getopt::Chain::Context->new( dispatcher => $self->dispatcher, arguments => $arguments );
+    my $context = $self->new_context( dispatcher => $self->dispatcher, arguments => $arguments );
     $context->run;
     return $context->options;
+}
+
+sub new_context {
+    my $self = shift;
+
+    my $context_from = $self->context_from;
+    if (! ref $context_from) {
+        return $context_from->new( @_ );
+    }
+    else {
+        croak "Don't understand context source \"$context_from\"";
+    }
 }
 
 use MooseX::MakeImmutable;

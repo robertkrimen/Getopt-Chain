@@ -19,8 +19,7 @@ rewrite [ ['about', 'copying'] ] => sub { "help $1" };
 
 start [qw//], sub {
     my $context = shift;
-    push @did, [ $context->command ];
-#    $context->continue;
+#    push @did, [ $context->command ]; # always_run is back, so we'll disable this for now
 };
 
 #on 'apple' => undef, sub {
@@ -128,7 +127,7 @@ sub run {
 #use XXX;
 
 run qw//;
-cmp_deeply( \@did, [ [ undef ] ] );
+cmp_deeply( \@did, [ ] );
 
 run qw/apple/;
 cmp_deeply( \@did, [ [qw/ apple /] ] );

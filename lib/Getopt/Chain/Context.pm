@@ -165,7 +165,14 @@ sub _build__options {
     return Hash::Param->new(params => {});
 }
 
-has stash => qw/is ro isa HashRef/, default => sub { {} };
+has _stash => qw/is ro isa HashRef/, default => sub { {} };
+sub stash {
+    my $self = shift;
+    return $self->_stash unless @_;
+    my $stash = $self->_stash;
+    while ( @_ ) { my ($k, $v) = (shift @_, shift @_); $stash->{$k} = $v }
+    return $stash;
+}
 
 # The original arguments from the commandline (or wherever)... read only!
 has arguments => qw/metaclass Collection::Array reader _arguments required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
@@ -238,14 +245,14 @@ sub next_path_part {
     return $self->shift_remaining_argument; # Same as $argument, really
 }
 
-sub at_end {
+sub last {
     my $self = shift;
     return ! defined $self->first_remaining_argument;
 }
 
 sub path_as_string {
     my $self = shift;
-    return join '/', '^START', $self->path, ($self->at_end ? '$' : ());
+    return join '/', '^START', $self->path, ($self->last ? '$' : ());
 }
 
 sub run_step { # Called from within the Path::Dispatcher rule
