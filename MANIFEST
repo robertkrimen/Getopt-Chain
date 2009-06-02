@@ -16,6 +16,7 @@ lib/Getopt/Chain/Builder.pm
 lib/Getopt/Chain/Carp.pm
 lib/Getopt/Chain/Context.pm
 lib/Getopt/Chain/Declare.pm
+lib/Getopt/Chain/Declare/under.pm
 lib/Getopt/Chain/v005.pm
 lib/Getopt/Chain/v005/Carp.pm
 lib/Getopt/Chain/v005/Context.pm
@@ -24,6 +25,7 @@ t/01-basic.t
 t/03-declare.t
 t/04-capture.t
 t/05-declare-with-argument.t
+t/06-declare-and-extend.t
 t/10-usage.t
 t/99-synopsis.t
 t/release/boilerplate.t

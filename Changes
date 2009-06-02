@@ -2,6 +2,11 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.013_1 Monday June 01 23:14:32 PDT 2009:
+    - Allow configuring of the context class
+    - Added Declare::under functionality
+    - Re-implemented the declarator to use a builder replay
+    
 0.013 Saturday May 16 00:40:06 PDT 2009:
     - Took erroring XXX out of .t
 
