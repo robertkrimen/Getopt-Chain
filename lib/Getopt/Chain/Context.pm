@@ -151,7 +151,14 @@ sub consume_arguments($$) { # Will modify arguments, reflecting consumption
     croak "There was an error option-processing arguments: $@" if $@;
 
     if (@$arguments && is_option_like $arguments->[0]) {
-        croak "Have remainder arguments after option-processing: ", $arguments->[0];
+        if (0) {
+            croak "Have remainder arguments after option-processing: ", $arguments->[0];
+        }
+        else {
+            my @discard;
+            push @discard, shift @$arguments while $arguments->[0] && is_option_like $arguments->[0];
+            warn "Unknown option-like argument@{[ @discard == 1 ? '' : 's' ]} (discarding): @discard", "\n";
+        }
     }
 
     return ( \%options );
@@ -241,7 +248,16 @@ sub next_path_part {
     my $self = shift;
 
     return unless defined (my $argument = $self->first_remaining_argument);
-    croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", join ' ', $self->remaining_arguments, "]" if is_option_like $argument;
+    if (0) {
+        croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", join ' ', $self->remaining_arguments, "]" if is_option_like $argument;
+    }
+    else {
+        while ( defined $argument && is_option_like $argument ) {
+            warn "Discarding option-like argument: ", $argument, "\n";
+            $self->shift_remaining_argument;
+            return unless defined ($argument = $self->first_remaining_argument);
+        }
+    }
     return $self->shift_remaining_argument; # Same as $argument, really
 }
 
