@@ -157,7 +157,7 @@ sub consume_arguments($$) { # Will modify arguments, reflecting consumption
         else {
             my @discard;
             push @discard, shift @$arguments while $arguments->[0] && is_option_like $arguments->[0];
-            warn "Unknown option-like argument@{[ @discard == 1 ? '' : 's' ]} (discarding): @discard", "\n";
+            warn "Unknown option-like argument@{[ @discard == 1 ? '' : 's' ]} (discarding): @discard", "\n" if DEBUG;
         }
     }
 
@@ -253,7 +253,7 @@ sub next_path_part {
     }
     else {
         while ( defined $argument && is_option_like $argument ) {
-            warn "Discarding option-like argument: ", $argument, "\n";
+            warn "Discarding option-like argument: ", $argument, "\n" if DEBUG;
             $self->shift_remaining_argument;
             return unless defined ($argument = $self->first_remaining_argument);
         }
