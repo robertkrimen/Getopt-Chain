@@ -2,6 +2,10 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.014 Wednesday June 03 17:38:25 PDT 2009:
+    - Fixed some documentation
+    - Discard unknown, option-like arguments, instead of croaking
+
 0.013_1 Monday June 01 23:14:32 PDT 2009:
     - Allow configuring of the context class
     - Added Declare::under functionality

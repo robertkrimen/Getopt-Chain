@@ -5,7 +5,7 @@ use warnings;
 
 =head1 NAME
 
-Getopt::Chain::Declare - Option and subcommand processing in the style of svn and git
+Getopt::Chain::Declare - Syntactic sugar for command-line processing like svn and git
 
 =head1 SYNPOSIS 
 

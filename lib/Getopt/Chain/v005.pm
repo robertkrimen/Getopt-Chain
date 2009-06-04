@@ -5,7 +5,7 @@ use strict;
 
 =head1 NAME
 
-Getopt::Chain::v005 - Option and subcommand processing in the style svn and git
+Getopt::Chain::v005 - Command-line processing like svn and git
 
 =head1 VERSION
 

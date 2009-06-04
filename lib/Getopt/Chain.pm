@@ -12,11 +12,11 @@ Getopt::Chain - Command-line processing like svn and git
 
 =head1 VERSION
 
-Version 0.013_1
+Version 0.014
 
 =cut
 
-our $VERSION = '0.013_1';
+our $VERSION = '0.014';
 
 =head1 SYNPOSIS 
 
@@ -128,6 +128,7 @@ use Getopt::Chain::Context;
 
 has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher /];
 sub _build_builder {
+    require Getopt::Chain::Builder;
     return Getopt::Chain::Builder->new;
 }
 
