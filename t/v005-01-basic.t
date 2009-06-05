@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::Trap;
+#use Test::Trap;
 use Test::Most;
 plan qw/no_plan/;
 
@@ -85,14 +85,14 @@ $options = Getopt::Chain->process(\@arguments,
 cmp_deeply($options, { qw/apple 1 banana cherry orange 1/ });
 cmp_deeply(\@path, [ undef, qw/grape lime mango berry/ ]);
 
-trap {
-    Getopt::Chain->process([],
-        run => sub {
-            shift->abort("Abort test");
-        },
-    );
-};
-is($trap->exit, -1);
+#trap {
+#    Getopt::Chain->process([],
+#        run => sub {
+#            shift->abort("Abort test");
+#        },
+#    );
+#};
+#is($trap->exit, -1);
 
 @arguments = qw/--apple grape 1 2 3 4 5/;
 $options = Getopt::Chain->process(\@arguments, 
