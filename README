@@ -2,7 +2,7 @@ NAME
     Getopt::Chain - Command-line processing like svn and git
 
 VERSION
-    Version 0.014
+    Version 0.015
 
 SYNPOSIS
         package My::Command;

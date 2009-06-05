@@ -12,11 +12,11 @@ Getopt::Chain - Command-line processing like svn and git
 
 =head1 VERSION
 
-Version 0.014
+Version 0.015
 
 =cut
 
-our $VERSION = '0.014';
+our $VERSION = '0.015';
 
 =head1 SYNPOSIS 
 

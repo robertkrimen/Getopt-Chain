@@ -2,6 +2,9 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.015 Thursday June 04 19:33:25 PDT 2009:
+    -  Made remainder warning optional on debug (via GOC_TRACE=1)
+
 0.014 Wednesday June 03 17:38:25 PDT 2009:
     - Fixed some documentation
     - Discard unknown, option-like arguments, instead of croaking
