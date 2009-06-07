@@ -150,17 +150,6 @@ sub consume_arguments($$) { # Will modify arguments, reflecting consumption
     };
     croak "There was an error option-processing arguments: $@" if $@;
 
-    if (@$arguments && is_option_like $arguments->[0]) {
-        if (0) {
-            croak "Have remainder arguments after option-processing: ", $arguments->[0];
-        }
-        else {
-            my @discard;
-            push @discard, shift @$arguments while $arguments->[0] && is_option_like $arguments->[0];
-            warn "Unknown option-like argument@{[ @discard == 1 ? '' : 's' ]} (discarding): @discard", "\n" if DEBUG;
-        }
-    }
-
     return ( \%options );
 }
 
@@ -182,15 +171,15 @@ sub stash {
 }
 
 # The original arguments from the commandline (or wherever)... read only!
-has arguments => qw/metaclass Collection::Array reader _arguments required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
-    elements    arguments
+has starting_arguments => qw/metaclass Collection::Array reader _arguments init_arg arguments required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
+    elements    starting_arguments
 /};
 
 # The arguments remaining after each step does argument consuming... written by the step!
-has remaining_arguments => qw/metaclass Collection::Array accessor _remaining_arguments isa ArrayRef/, provides => {qw/
-    elements    remaining_arguments
-    shift       shift_remaining_argument
-    first       first_remaining_argument
+has parsing_arguments => qw/metaclass Collection::Array accessor _parsing_arguments isa ArrayRef/, provides => {qw/
+    elements    parsing_arguments
+    shift       shift_parsing_argument
+    first       first_parsing_argument
 /};
 
 has steps => qw/metaclass Collection::Array reader _steps required 1 lazy 1 isa ArrayRef/, default => sub { [] }, provides => {qw/
@@ -208,7 +197,7 @@ has _path => qw/metaclass Collection::Array is ro required 1 lazy 1 isa ArrayRef
 
 sub initialize_run {
     my $self = shift;
-    $self->_remaining_arguments( [ $self->arguments ] );
+    $self->_parsing_arguments( [ $self->starting_arguments ] );
 }
 
 sub run {
@@ -221,14 +210,13 @@ sub run {
 sub next {
     my $self = shift;
 
-    unless (defined $self->_remaining_arguments) { # Haven't been run yet
+    unless (defined $self->_parsing_arguments) { # Haven't been run yet
         $self->initialize_run;
     }
 
     my $run_path = join ' ', $self->path;
     warn "Context::next ", $self->path_as_string, " ($run_path)\n"  if $DEBUG;
 
-    
     {
         # $self->dispatcher->run( $run_path, $self ); # This will (indirectly) call ->run_step( ... ) below
         my $dispatch = $self->dispatcher->dispatch( $run_path );
@@ -239,31 +227,23 @@ sub next {
             }
         }
     }
-    my $next_path_part;
-    $self->push_path( $next_path_part ) if $next_path_part = $self->next_path_part;
-    return $next_path_part;
+
+    my $next;
+    $self->push_path( $next ) if $next = $self->next_path_part;
+    return $next;
 }
 
 sub next_path_part {
     my $self = shift;
 
-    return unless defined (my $argument = $self->first_remaining_argument);
-    if (0) {
-        croak "Had remainder arguments after option-processing: ", $argument, " @ ", $self->path_as_string, " [", join ' ', $self->remaining_arguments, "]" if is_option_like $argument;
-    }
-    else {
-        while ( defined $argument && is_option_like $argument ) {
-            warn "Discarding option-like argument: ", $argument, "\n" if DEBUG;
-            $self->shift_remaining_argument;
-            return unless defined ($argument = $self->first_remaining_argument);
-        }
-    }
-    return $self->shift_remaining_argument; # Same as $argument, really
+    return unless defined (my $argument = $self->first_parsing_argument);
+    croak "Have option-like element at head of parsing arguments: ", $argument, " @ ", $self->path_as_string, " [", join ' ', $self->parsing_arguments, "]" if is_option_like $argument;
+    return $self->shift_parsing_argument; # Same as $argument, really
 }
 
 sub last {
     my $self = shift;
-    return ! defined $self->first_remaining_argument;
+    return ! defined $self->first_parsing_argument;
 }
 
 sub path_as_string {
@@ -279,8 +259,8 @@ sub run_step { # Called from within the Path::Dispatcher rule
 
     $argument_schema = [] unless defined $argument_schema;
     
-    my $step = $self->add_step( argument_schema => $argument_schema, run => $run ); 
-    return 1 if $step->run( $control ); # We consumed and ran, so we need to rollback
+    my $step = $self->add_step( argument_schema => $argument_schema, run => $run, @_ ); 
+    return 1 if $step->run( $control ); # We consumed and ran, so we don't need to rollback
     $self->pop_step; # Rollback, since we didn't actually run
     return 0;
 }
@@ -290,7 +270,7 @@ sub add_step {
     my %given = @_; # Should be: argument_schema, run
 
     my $parent = $self->last_step; # Could be undef
-    my $step = Getopt::Chain::Context::Step->new( context => $self, parent => $parent, path => [ $self->path ], arguments => [ $self->remaining_arguments ], %given );
+    my $step = Getopt::Chain::Context::Step->new( context => $self, parent => $parent, path => [ $self->path ], arguments => [ $self->parsing_arguments ], %given );
     $self->push_step( $step );
     return $step;
 }
@@ -333,9 +313,14 @@ sub _build__options {
     return Hash::Param->new( params => {} );
 }
 
-has arguments => qw/metaclass Collection::Array accessor _arguments required 1 isa ArrayRef/, provides => {qw/
-    elements arguments
+has starting_arguments => qw/metaclass Collection::Array init_arg arguments accessor _starting_arguments required 1 isa ArrayRef/, provides => {qw/
+    elements starting_arguments
 /};
+
+has remaining_arguments => qw/metaclass Collection::Array accessor _remaining_arguments isa ArrayRef lazy 1/, provides => {qw/
+    elements remaining_arguments
+    elements arguments
+/}, default => sub { [] };
 
 has argument_schema => qw/metaclass Collection::Array accessor _argument_schema required 1 isa ArrayRef/, provides => {qw/
     elements argument_schema
@@ -351,47 +336,69 @@ has _path => qw/metaclass Collection::Array is ro required 1 lazy 1 isa ArrayRef
 
 has parent => qw/is ro isa Maybe[Getopt::Chain::Context::Step]/;
 
+has dollar1 => qw/is ro/;
+
 sub run {
     my $self = shift;
     my $control = shift;
 
-    my @arguments;
-    if ($control->{arguments_from_1} && defined $1) {
-        push @arguments, grep { length } split m/\s+/, $1;
-    }
-
     my $options = {};
-    my $arguments = [ $self->arguments ];
+    my $arguments = [ $self->starting_arguments ];
     my $argument_schema = [ $self->argument_schema ];
+    my ( $last );
 
     warn "Context::Step::run ", $self->context->path_as_string, " [@$arguments] {@$argument_schema}\n" if $DEBUG;
 
     eval {
         $options = Getopt::Chain::Context::consume_arguments $argument_schema, $arguments;
+        unless ( $control->{terminator} ) {
+            if ( @$arguments && Getopt::Chain::Context::is_option_like $arguments->[0] ) {
+                die "Unknown option-like argument: $arguments->[0]", "\n";
+            }
+        }
     };
-    if ($@) {
-        chomp( my $error = $@ );
-        croak "At ", join( '/', $self->path ), " with arguments [@$arguments]: $@";
-    }
-
-    $self->context->_remaining_arguments( $arguments );
+    die "Exception at \"", join( '/', $self->path ), "\" with arguments [ @$arguments ]: $@" if $@;
 
     while (my ($key, $value) = each %$options) {
         $self->option( $key => $value );
         $self->context->option( $key => $value ); # TODO Better way to do this...
     }
 
-    my $last = ! @$arguments;
-
-    unless ($last || $control->{always_run}) {
+    $self->_remaining_arguments( $arguments );
+    if ( $control->{terminator} ) {
+        $self->context->_parsing_arguments( [] );
+        $last = 1;
+    }
+    else {
+        $self->context->_parsing_arguments( [ @$arguments ] );
+        $last = @$arguments ? 0 : 1; # Same as $ctx->last, really
+    }
+    
+    unless ( $last || $control->{always_run} ) {
         warn "Context::Step::run ", $self->context->path_as_string, " SKIP\n" if DEBUG;
         return;
     }
 
-    push @arguments, @$arguments; # TODO: Test this
+    {
+        # on 'A *'
 
-    my $run = $self->_run;
-    $run->( $self->context, @arguments ) if $run;
+        # A b -x c (Although this is an error condition)
+        # A b -x c      $1 = ''     [ b -x c ]
+        # A/b -x c      $1 = 'b'    [ -x c ] # Error, -x wasn't parsed!
+        # A/b/c         $1 = 'b c'  [ ]
+
+        # A b c d
+        # A b c d       $1 = ''         [ b c d ]
+        # A/b c d       $1 = 'b'        [ c d ]
+        # A/b/c d       $1 = 'b c'      [ d ]
+        # A/b/c/d       $1 = 'b c d'    [ ]
+
+        my @arguments;
+        push @arguments, grep { length } split m/\s+/, $self->dollar1 if defined $self->dollar1;
+        push @arguments, @$arguments;
+        my $run = $self->_run;
+        $run->( $self->context, @arguments ) if $run;
+    }
 
     return 1;
 }

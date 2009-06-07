@@ -18,33 +18,52 @@ rewrite qr/^\?(.*)/ => sub { "help ".($1||'') };
 rewrite [ ['about', 'copying'] ] => sub { "help $1" };
 
 start [qw//], sub {
-    my $context = shift;
-#    push @did, [ $context->command ]; # always_run is back, so we'll disable this for now
+    my $ctx = shift;
+#    push @did, [ $ctx->command ]; # always_run is back, so we'll disable this for now
 };
 
 #on 'apple' => undef, sub {
-#    my $context = shift;
-#    push @did, [ $context->command ];
+#    my $ctx = shift;
+#    push @did, [ $ctx->command ];
 #};
 
 on 'apple banana' => undef, sub {
-    my $context = shift;
+    my $ctx = shift;
     push @did, [ 'apple banana' ];
 };
 
 on 'apple *' => undef, sub {
-    my $context = shift;
+    my $ctx = shift;
     push @did, [ 'apple' ];
 };
 
+on 'banana cherry' => sub {
+    my $ctx = shift;
+    warn "@_";
+};
+
+on 'banana --' => sub {
+    my $ctx = shift;
+    warn "@_";
+};
+
+under 'cherry' => sub {
+
+    on '--' => sub {
+        my $ctx = shift;
+        warn "@_";
+    };
+
+};
+
 on help => undef, sub {
-    my $context = shift;
+    my $ctx = shift;
 
     # Do help stuff ...
     # First argument is undef because help
     # doesn't take any options
     
-    push @did, [ $context->command, ];
+    push @did, [ $ctx->command, ];
 };
 
 under help => sub {
@@ -52,42 +71,42 @@ under help => sub {
     # my-command help create
     # my-command help initialize
     on [ [ qw/create initialize/ ] ] => undef, sub {
-        my $context = shift;
+        my $ctx = shift;
 
         # Do help for create/initialize
         # Both: "help create" and "help initialize" go here
 
-        push @did, [ 'help', $context->command, ];
+        push @did, [ 'help', $ctx->command, ];
     };
 
     # my-command help about
     on 'about' => undef, sub {
-        my $context = shift;
+        my $ctx = shift;
 
         # Help for about...
 
-        push @did, [ 'help', $context->command, ];
+        push @did, [ 'help', $ctx->command, ];
     };
 
     # my-command help copying
     on 'copying' => undef, sub {
-        my $context = shift;
+        my $ctx = shift;
 
         # Help for copying...
 
-        push @did, [ 'help', $context->command, ];
+        push @did, [ 'help', $ctx->command, ];
     };
 
     # my-command help ...
     # Also, on '*' will sort of work...
     on '*' => undef, sub {
 #    on qr/^(\S+)$/ => undef, sub {
-       my $context = shift;
+       my $ctx = shift;
        my $topic = $1;
 
         # Catch-all for anything not fitting into the above...
         
-        push @did, [ 'help', $context->command, "I don't know about \"$topic\"" ]
+        push @did, [ 'help', $ctx->command, "I don't know about \"$topic\"" ]
     };
 };
 
@@ -96,21 +115,21 @@ on qr/.*/ => undef, sub {
 };
 
 #on apple => [qw/ c3 /], sub {
-#    my $context = shift;
+#    my $ctx = shift;
 #
-#    $context->option( apple => 1 );
+#    $ctx->option( apple => 1 );
 #};
 #
 #on help => undef, sub {
-#    my $context = shift;
+#    my $ctx = shift;
 #
-#    $context->option( help => 1 );
+#    $ctx->option( help => 1 );
 #};
 
 #on 'help xyzzy' => undef, sub {
-#    my $context = shift;
+#    my $ctx = shift;
 
-#    $context->option( help_xyzzy => 1 );
+#    $ctx->option( help_xyzzy => 1 );
 #};
 
 no Getopt::Chain::Declare;
@@ -151,3 +170,15 @@ cmp_deeply( \@did, [ [ 'help', 'xyzzy', 'I don\'t know about "xyzzy"'  ] ] );
 
 run qw/about/;
 cmp_deeply( \@did, [ [ 'help', 'about'  ] ] );
+
+# TODO Moar better
+eval {
+    run qw/apple argument --option/;
+};
+ok( $@ );
+
+run qw/banana argument --option/;
+
+run qw/banana cherry argument --option/;
+
+run qw/cherry argument --option/;
