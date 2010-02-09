@@ -172,8 +172,8 @@ sub new_context {
     }
 }
 
-use MooseX::MakeImmutable;
-MooseX::MakeImmutable->lock_down;
+#use MooseX::MakeImmutable;
+#MooseX::MakeImmutable->lock_down;
 
 =head1 SEE ALSO
 
