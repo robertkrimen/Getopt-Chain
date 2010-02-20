@@ -106,7 +106,6 @@ Similar to the stash in L<Catalyst>
 Returns a copy of the arguments (@ARGV) for the current command BEFORE option parsing
 
 Returns an ARRAY reference (still a copy) when called in scalar context
-
     ./script --verbose edit --file xyzzy.c
 
     # At the very beginning: 
