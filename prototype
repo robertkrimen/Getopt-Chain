@@ -1,0 +1,72 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+package GtC;
+
+use Any::Moose;
+
+use Path::StepDispatcher;
+#use Carp::Always;
+
+has builder => qw/ is ro lazy_build 1 /;
+sub _build_builder {
+    my $self = shift;
+    return Path::StepDispatcher::Builder->new(
+        parse_rule => \&_parse_rule,
+        parse_switch => \&_parse_switch,
+    );
+}
+
+has dispatcher => qw/ is ro lazy_build 1 /;
+sub _build_dispatcher {
+    my $self = shift;
+    return Path::StepDispatcher->new( root => $self->builder->build_switch );
+}
+
+sub parse_argument_schema {
+    my $self = shift;
+    return sub { warn "Hello, World." };
+}
+
+sub _parse_rule {
+    my $builder = shift;
+    my $input = shift;
+
+    return $builder->builtin_parse_rule( $input );
+}
+
+sub _parse_switch {
+    my $builder = shift;
+    my $rule = shift;
+    if ( ref $_[0] eq 'ARRAY' ) {
+        unshift @_, __PACKAGE__->parse_argument_schema( shift @_ );
+    }
+
+    return $builder->builtin_parse_switch( $rule, @_ );
+}
+
+package main;
+
+use Test::Most;
+
+plan qw/no_plan/;
+
+my $gtc = GtC->new();
+
+ok( $gtc );
+ok( $gtc->dispatcher );
+
+sub path {
+    return $gtc->builder->parse_switch( @_ );
+}
+
+$gtc->dispatcher->root->add(
+    path( qr/apple\/?/, [ qw/ -s / ],
+    )
+);
+
+$gtc->dispatcher->dispatch( "apple" );
+
+1;
