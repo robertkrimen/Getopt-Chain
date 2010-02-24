@@ -6,6 +6,7 @@ use warnings;
 package GtC;
 
 use Any::Moose;
+use Carp;
 
 use Path::StepDispatcher;
 #use Carp::Always;
@@ -22,17 +23,56 @@ sub _build_builder {
 has dispatcher => qw/ is ro lazy_build 1 /;
 sub _build_dispatcher {
     my $self = shift;
-    return Path::StepDispatcher->new( root => $self->builder->build_switch );
+    return Path::StepDispatcher->new(
+        root => $self->builder->build_switch,
+        build_context => 'GtC::Context',
+    );
+}
+
+sub is_option_like ($) {
+    return $_[0] =~ m/^-/;
+}
+
+use Getopt::Long qw/GetOptionsFromArray/;
+sub consume_arguments ($$) { # Will modify arguments, reflecting consumption
+    my $argument_schema = shift;
+    my $arguments = shift;
+
+    my %options;
+    eval {
+        if ( $argument_schema && @$argument_schema ) {
+            Getopt::Long::Configure(qw/ pass_through /);
+            GetOptionsFromArray( $arguments, \%options, @$argument_schema );
+        }
+    };
+    croak "There was an error option-processing arguments: $@" if $@;
+
+    return ( \%options );
 }
 
 sub parse_argument_schema {
     my $self = shift;
-    return sub { warn "Hello, World." };
+    my $argument_schema = shift;
+    return sub {
+        my $ctx = shift;
+        my $arguments = [ grep { length && m/\S/ } split m/\s/, $ctx->path ];
+        my $options;
+        eval {
+            $options = consume_arguments $argument_schema, $arguments;
+            # TODO die "Unknown option-like argument" unless $ctx->local->is_terminal
+        };
+        die $@ if $@;
+        $ctx->path( join ' ', @$arguments ); # TODO How should we reconstitute the path?
+    };
 }
 
 sub _parse_rule {
     my $builder = shift;
     my $input = shift;
+
+    if ( defined $input && ref $input eq '' ) {
+        $input = qr/$input/;
+    }
 
     return $builder->builtin_parse_rule( $input );
 }
@@ -46,6 +86,14 @@ sub _parse_switch {
 
     return $builder->builtin_parse_switch( $rule, @_ );
 }
+
+package GtC::Context;
+
+use Any::Moose;
+
+extends qw/Path::StepDispatcher::Context/;
+
+1;
 
 package main;
 
@@ -63,10 +111,20 @@ sub path {
 }
 
 $gtc->dispatcher->root->add(
-    path( qr/apple\/?/, [ qw/ -s / ],
-    )
+    path( "apple", [ qw/ a1 b2:s / ],
+        sub {
+            my $ctx = shift;
+            warn "At apple\n";
+        },
+        path ( "banana", 
+            sub {
+                my $ctx = shift;
+                warn "At banana\n";
+            }
+        ),
+    ),
 );
 
-$gtc->dispatcher->dispatch( "apple" );
+$gtc->dispatcher->dispatch( "apple --a1 banana" );
 
 1;
