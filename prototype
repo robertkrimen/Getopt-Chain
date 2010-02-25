@@ -61,7 +61,7 @@ sub parse_argument_schema {
         my $options;
         eval {
             $options = consume_arguments $argument_schema, $arguments;
-            # TODO die "Unknown option-like argument" unless $ctx->local->is_terminal
+            die "Unknown option-like argument" if @$arguments && is_option_like $arguments->[0];
         };
         die $@ if $@;
 
@@ -87,6 +87,9 @@ sub _parse_switch {
     my $rule = shift;
     if ( ref $_[0] eq 'ARRAY' ) {
         unshift @_, __PACKAGE__->parse_argument_schema( shift @_ );
+    }
+    elsif ( $_[0] && $_[0] eq '--' ) {
+        shift @_; 
     }
 
     return $builder->builtin_parse_switch( $rule, @_ );
@@ -178,13 +181,19 @@ $gtc->dispatcher->root->add(
             ok( $ctx->option( 'a1' ) );
             is( $ctx->local->option( 'a1' ), '1' );
         },
-        path ( "banana", [ qw/ a1:s / ],
+        path( "banana", [ qw/ a1:s / ],
             sub {
                 my $ctx = shift;
                 diag "At banana\n";
                 $ctx->option( 'a1', 'a1' );
                 is( $ctx->option( 'b2' ), 'b2' );
-            }
+            },
+            path( "cherry", "--",
+                sub {
+                    my $ctx = shift;
+                    is( $ctx->path, ' --a2' );
+                },
+            ),
         ),
         sub {
             diag "Post banana\n";
@@ -195,6 +204,7 @@ $gtc->dispatcher->root->add(
     ),
 );
 
-$gtc->dispatcher->dispatch( "apple --a1 banana --a1 a1 --b2 b2" );
+$gtc->dispatcher->dispatch( "apple --a1 banana --b2 b2" );
+$gtc->dispatcher->dispatch( "apple --a1 banana --b2 b2 cherry --a2" );
 
 1;
