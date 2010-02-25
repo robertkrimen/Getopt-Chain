@@ -26,6 +26,7 @@ sub _build_dispatcher {
     return Path::StepDispatcher->new(
         root => $self->builder->build_switch,
         build_context => 'GtC::Context',
+        build_switch_context => 'GtC::SwitchContext',
     );
 }
 
@@ -55,6 +56,7 @@ sub parse_argument_schema {
     my $argument_schema = shift;
     return sub {
         my $ctx = shift;
+
         my $arguments = [ grep { length && m/\S/ } split m/\s/, $ctx->path ];
         my $options;
         eval {
@@ -62,6 +64,9 @@ sub parse_argument_schema {
             # TODO die "Unknown option-like argument" unless $ctx->local->is_terminal
         };
         die $@ if $@;
+
+        $ctx->set_options( $options );
+        $ctx->local->set_options( $options );
         $ctx->path( join ' ', @$arguments ); # TODO How should we reconstitute the path?
     };
 }
@@ -93,6 +98,61 @@ use Any::Moose;
 
 extends qw/Path::StepDispatcher::Context/;
 
+use Hash::MultiValue;
+
+has _options =>
+    qw/ is rw isa Hash::MultiValue lazy_build 1 /;
+sub _build__options {
+    my $self = shift;
+    return Hash::MultiValue->new;
+}
+
+sub option {
+    my $self = shift;
+    if ( @_ > 1 ) {
+        $self->_options->remove( $_[0] );
+        $self->_options->add( @_ );
+    }
+    return $self->_options->get( $_[0] );
+}
+sub set_options {
+    my $self = shift;
+    my $options = shift;
+    while (my ($key, $value) = each %$options) {
+        $self->_options->remove( $key );
+        $self->_options->add( $key => $value );
+    }
+}
+
+package GtC::SwitchContext;
+
+use Any::Moose;
+
+extends qw/Path::StepDispatcher::SwitchContext/;
+
+use Hash::MultiValue;
+
+has _options =>
+    qw/ is rw isa Hash::MultiValue lazy_build 1 /;
+sub _build__options {
+    my $self = shift;
+    return Hash::MultiValue->new;
+}
+
+sub option {
+    my $self = shift;
+    if ( @_ > 1 ) {
+        $self->_options->remove( $_[0] );
+        $self->_options->add( @_ );
+    }
+    return $self->_options->get( $_[0] );
+}
+sub set_options {
+    my $self = shift;
+    my $options = shift;
+    $self->_options( Hash::MultiValue->new( %$options ) );
+}
+
 1;
 
 package main;
@@ -114,17 +174,27 @@ $gtc->dispatcher->root->add(
     path( "apple", [ qw/ a1 b2:s / ],
         sub {
             my $ctx = shift;
-            warn "At apple\n";
+            diag "At apple\n";
+            ok( $ctx->option( 'a1' ) );
+            is( $ctx->local->option( 'a1' ), '1' );
         },
-        path ( "banana", 
+        path ( "banana", [ qw/ a1:s / ],
             sub {
                 my $ctx = shift;
-                warn "At banana\n";
+                diag "At banana\n";
+                $ctx->option( 'a1', 'a1' );
+                is( $ctx->option( 'b2' ), 'b2' );
             }
         ),
+        sub {
+            diag "Post banana\n";
+            my $ctx = shift;
+            is( $ctx->option( 'a1' ), 'a1' );
+            is( $ctx->local->option( 'a1' ), '1' );
+        },
     ),
 );
 
-$gtc->dispatcher->dispatch( "apple --a1 banana" );
+$gtc->dispatcher->dispatch( "apple --a1 banana --a1 a1 --b2 b2" );
 
 1;
