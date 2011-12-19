@@ -2,6 +2,10 @@ TODO:
     - Test with '--' (huh?)
     - Implement 'defer' sugar/backing
 
+0.017 Monday December 19 11:54:40 PST 2011:
+    - Update to be compatible with latest Path::Dispatcher
+    - Use Dist::Zilla
+
 0.016 Friday June 05 09:36:58 PDT 2009:
     - Removed Test::Trap dependency
 
