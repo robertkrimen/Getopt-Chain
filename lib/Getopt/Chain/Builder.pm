@@ -4,12 +4,12 @@ use Moose;
 use Getopt::Chain::Carp;
 
 use Path::Dispatcher;
-use Path::Dispatcher::Builder;
+use Path::Dispatcher::Declarative::Builder;
 
 has builder => qw/is ro lazy_build 1/, handles => [qw/ dispatcher rewrite /];
 sub _build_builder {
     my $self = shift;
-    return Path::Dispatcher::Builder->new;
+    return Path::Dispatcher::Declarative::Builder->new;
 }
 
 sub start {

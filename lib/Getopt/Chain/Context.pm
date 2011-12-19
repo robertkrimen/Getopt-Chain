@@ -222,7 +222,7 @@ sub next {
         my $dispatch = $self->dispatcher->dispatch( $run_path );
         if ( my @matches = $dispatch->matches ) {
             for my $match ($dispatch->matches) {
-                my $result = $match->result;
+                my $result = $match->positional_captures;
                 last if $match->run( $self ); # ->run_step returned true
             }
         }

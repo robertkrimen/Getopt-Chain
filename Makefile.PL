@@ -37,6 +37,7 @@ Moose
 MooseX::AttributeHelpers
 MooseX::MakeImmutable 0.02
 Path::Dispatcher
+Path::Dispatcher::Declarative
 _END_
 }
 
