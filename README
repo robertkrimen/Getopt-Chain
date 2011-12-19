@@ -2,7 +2,31 @@ NAME
     Getopt::Chain - Command-line processing like svn and git
 
 VERSION
-    Version 0.016
+    version 0.017
+
+DESCRIPTION
+    Getopt::Chain can be used to provide svn(1)- and git(1)-style option and
+    command processing. Any option specification covered by Getopt::Long is
+    fair game.
+
+    This is a new version of Getopt::Chain that uses Path::Dispatcher
+
+    CAVEAT 1: This is pretty beta, so the sugar/interface above WILL be
+    tweaked
+
+    CAVEAT 2: Unfortunately, Getopt::Long slurps up the entire arguments
+    array at once. Usually, this isn't a problem (as Getopt::Chain uses
+    pass_through). However, if a subcommand has an option with the same name
+    or alias as an option for a parent, then that option won't be available
+    for the subcommand. For example:
+
+        ./script --verbose --revision 36 edit --revision 48 --file xyzzy.c
+        # Getopt::Chain will not associate the second --revision with "edit"
+
+    So, for now, try to use distinct option names/aliases :)
+
+    DEBUG: You can get some extra information about what Getopt::Chain is
+    doing by setting the environment variable "GOC_TRACE" to 1
 
 SYNPOSIS
         package My::Command;
@@ -79,30 +103,6 @@ SYNPOSIS
         My::Command->new->run( [ @arguments ] )
         My::Command->new->run # Just run with @ARGV
 
-DESCRIPTION
-    Getopt::Chain can be used to provide svn(1)- and git(1)-style option and
-    command processing. Any option specification covered by Getopt::Long is
-    fair game.
-
-    This is a new version of Getopt::Chain that uses Path::Dispatcher
-
-    CAVEAT 1: This is pretty beta, so the sugar/interface above WILL be
-    tweaked
-
-    CAVEAT 2: Unfortunately, Getopt::Long slurps up the entire arguments
-    array at once. Usually, this isn't a problem (as Getopt::Chain uses
-    pass_through). However, if a subcommand has an option with the same name
-    or alias as an option for a parent, then that option won't be available
-    for the subcommand. For example:
-
-        ./script --verbose --revision 36 edit --revision 48 --file xyzzy.c
-        # Getopt::Chain will not associate the second --revision with "edit"
-
-    So, for now, try to use distinct option names/aliases :)
-
-    DEBUG: You can get some extra information about what Getopt::Chain is
-    doing by setting the environment variable "GOC_TRACE" to 1
-
 LEGACY
     The old-style, non Path::Dispatcher version is still available at
     Getopt::Chain::v005
@@ -121,48 +121,11 @@ ACKNOWLEDGEMENTS
     <http://syncwith.us/>)
 
 AUTHOR
-    Robert Krimen, "<rkrimen at cpan.org>"
+    Robert Krimen <robertkrimen@gmail.com>
 
-SOURCE
-    You can contribute or fork this project via GitHub:
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2011 by Robert Krimen.
 
-    <http://github.com/robertkrimen/Getopt-Chain/tree/master>
-
-        git clone git://github.com/robertkrimen/Getopt-Chain.git Getopt-Chain
-
-BUGS
-    Please report any bugs or feature requests to "bug-Getopt-Chain at
-    rt.cpan.org", or through the web interface at
-    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Getopt-Chain>. I will be
-    notified, and then you'll automatically be notified of progress on your
-    bug as I make changes.
-
-SUPPORT
-    You can find documentation for this module with the perldoc command.
-
-        perldoc Getopt::Chain
-
-    You can also look for information at:
-
-    *   RT: CPAN's request tracker
-
-        <http://rt.cpan.org/NoAuth/Bugs.html?Dist=Getopt-Chain>
-
-    *   AnnoCPAN: Annotated CPAN documentation
-
-        <http://annocpan.org/dist/Getopt-Chain>
-
-    *   CPAN Ratings
-
-        <http://cpanratings.perl.org/d/Getopt-Chain>
-
-    *   Search CPAN
-
-        <http://search.cpan.org/dist/Getopt-Chain>
-
-COPYRIGHT & LICENSE
-    Copyright 2008 Robert Krimen, all rights reserved.
-
-    This program is free software; you can redistribute it and/or modify it
-    under the same terms as Perl itself.
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
 

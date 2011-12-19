@@ -1,22 +1,11 @@
 package Getopt::Chain;
+# ABSTRACT: Command-line processing like svn and git
 
 use warnings;
 use strict;
 
 use constant DEBUG => $ENV{GOC_TRACE} ? 1 : 0;
 our $DEBUG = DEBUG;
-
-=head1 NAME
-
-Getopt::Chain - Command-line processing like svn and git
-
-=head1 VERSION
-
-Version 0.016
-
-=cut
-
-our $VERSION = '0.016';
 
 =head1 SYNPOSIS 
 
@@ -188,65 +177,6 @@ L<MooseX::App::Cmd>
 Sartak for L<Path::Dispatcher>
 
 obra for inspiration on the CLI (via Prophet & Sd: L<http://syncwith.us/>)
-
-=head1 AUTHOR
-
-Robert Krimen, C<< <rkrimen at cpan.org> >>
-
-=head1 SOURCE
-
-You can contribute or fork this project via GitHub:
-
-L<http://github.com/robertkrimen/Getopt-Chain/tree/master>
-
-    git clone git://github.com/robertkrimen/Getopt-Chain.git Getopt-Chain
-
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-Getopt-Chain at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Getopt-Chain>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Getopt::Chain
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Getopt-Chain>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Getopt-Chain>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Getopt-Chain>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Getopt-Chain>
-
-=back
-
-
-=head1 COPYRIGHT & LICENSE
-
-Copyright 2008 Robert Krimen, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
-
 
 =cut
 
